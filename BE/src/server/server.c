@@ -1,4 +1,3 @@
-// server.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,6 +22,7 @@ void server_run() {
         perror("socket error");
         exit(1);
     }
+
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -56,7 +56,7 @@ void server_run() {
             close(client_socket);
             continue;
         }
-        buffer[str_len] = 0;  // null-terminate
+        buffer[str_len] = 0; // 널 문자 삽입
 
         // HTTP 메서드와 경로 추출
         char method[8];
@@ -78,6 +78,4 @@ void server_run() {
 
         close(client_socket);  // 클라이언트 소켓 닫기
     }
-
-
 }
