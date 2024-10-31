@@ -1,8 +1,8 @@
-//
-// Created by 신현욱 on 2024. 10. 31..
-//
-
 #ifndef SERVER_PROJECT_CONFIG_H
 #define SERVER_PROJECT_CONFIG_H
+
+// 포트 번호 정의
+#define SERVER_PORT 8080
+
 
 #endif //SERVER_PROJECT_CONFIG_H

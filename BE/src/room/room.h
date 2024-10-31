@@ -1,0 +1,4 @@
+#ifndef CHESS_SERVER_ROOM_H
+#define CHESS_SERVER_ROOM_H
+
+#endif //CHESS_SERVER_ROOM_H
