@@ -6,15 +6,12 @@
 #include "auth.h"
 
 void handle_request(int client_socket, const char *method, const char *path, cJSON *json_request) {
-    printf("Handling request: [%s] %s\n", method, path);
-
     if (strcmp(method, "POST") == 0 && strcmp(path, "/join") == 0) {
         // 회원가입 처리
         join_handler(client_socket, json_request);
     }
-    else if (strcmp(method, "POST") == 0 && strcmp(path, "/login") == 0) {
-        // 로그인 처리
-//        login_handler(client_socket, json_request);
+    else if (strcmp(method, "GET") == 0 && strcmp(path, "/login") == 0) {
+        login_handler(client_socket, json_request);
     }
     else if (strcmp(method, "GET") == 0 && strcmp(path, "/profile") == 0) {
         // 프로필 조회 처리

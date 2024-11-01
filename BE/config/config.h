@@ -9,4 +9,9 @@
 #define USER_LIST_FILE "../data/user/user_list.txt"
 
 
+
+
+// 토큰 길이 정의
+#define TOKEN_LENGTH 32
+
 #endif //SERVER_PROJECT_CONFIG_H
