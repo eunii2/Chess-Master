@@ -182,4 +182,81 @@ export const ErrorMessage = styled.div`
     padding: 2rem;
     color: #e11d48;
     font-size: 1.125rem;
+`;
+
+export const Modal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+export const ModalContent = styled.div`
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: ${fadeIn} 0.3s ease-out;
+`;
+
+export const ModalTitle = styled.h2`
+  font-size: 1.5rem;
+  color: #1e293b;
+  margin-bottom: 1.5rem;
+  text-align: center;
+`;
+
+export const ModalInput = styled.input`
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  transition: border-color 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+`;
+
+export const ModalButtonGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+`;
+
+export const ModalButton = styled.button`
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  ${props => props.primary ? `
+    background: #3b82f6;
+    color: white;
+    border: none;
+
+    &:hover {
+      background: #2563eb;
+    }
+  ` : `
+    background: white;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+
+    &:hover {
+      background: #f1f5f9;
+    }
+  `}
 `; 

@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import GameListPage from './pages/GameListPage';
+import GameRoom from './pages/GameRoom';
 import { createGlobalStyle } from 'styled-components';
 
 const GlobalStyle = createGlobalStyle`
@@ -40,6 +41,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/games" element={<GameListPage />} />
+          <Route path="/games/:roomId" element={<GameRoom />} />
         </Routes>
       </Router>
     </>
