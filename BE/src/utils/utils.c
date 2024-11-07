@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include "config.h"
+#include <string.h>
 
 
 // JSON 파싱 및 출력 함수
@@ -39,4 +41,43 @@ void generate_token(char *token, size_t length) {
         token[i] = charset[rand() % charset_size];
     }
     token[length] = '\0';
+}
+
+
+// 토큰으로 userID를 찾는 함수. 실패시 -1 반환
+int get_user_id_by_token(const char* token) {
+    if (!token) return -1;
+
+    // user_list.txt 파일 열기
+    FILE *file = fopen(USER_LIST_FILE, "r");
+    if (!file) {
+        perror("fopen error");
+        return -1;
+    }
+
+    char buffer[512];
+    int user_id = -1;
+
+    while (fgets(buffer, sizeof(buffer), file)) {
+        // Token이 있는 라인 찾기
+        char *token_pos = strstr(buffer, "Token: ");
+        if (token_pos) {
+            // 해당 라인에서 토큰 추출
+            char current_token[TOKEN_LENGTH + 1];
+            sscanf(token_pos + strlen("Token: "), "%s", current_token);
+
+            // 토큰이 일치하면 user_id 추출
+            if (strcmp(current_token, token) == 0) {
+                // User ID: 부분 찾기
+                char *id_pos = strstr(buffer, "User ID: ");
+                if (id_pos) {
+                    sscanf(id_pos + strlen("User ID: "), "%d", &user_id);
+                    break;
+                }
+            }
+        }
+    }
+
+    fclose(file);
+    return user_id;
 }
