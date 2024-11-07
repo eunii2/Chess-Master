@@ -8,7 +8,10 @@
 #define USER_DATA_DIR "../data/user/"
 #define USER_LIST_FILE "../data/user/user_list.txt"
 
+// 방 관련 디렉토리 및 파일 경로 정의
+#define ROOM_LIST_FILE "../data/rooms/room_list.txt"
 
+extern const char *cors_headers;
 
 
 // 토큰 길이 정의
