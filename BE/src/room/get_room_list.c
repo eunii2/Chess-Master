@@ -32,18 +32,38 @@ void get_room_list_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 파일을 읽기 모드로 열기
     FILE *file = fopen(ROOM_LIST_FILE, "r");
     if (!file) {
-        perror("fopen error");
-        char error_response[512];
-        snprintf(error_response, sizeof(error_response),
-                 "HTTP/1.1 500 Internal Server Error\r\n"
-                 "Content-Type: application/json\r\n"
-                 "%s\r\n"
-                 "{\"status\":\"error\",\"message\":\"Failed to retrieve room list\"}",
-                 cors_headers);
-        write(client_socket, error_response, strlen(error_response));
-        return;
+        // 파일이 없어서 열 수 없는 경우, 생성 시도
+        file = fopen(ROOM_LIST_FILE, "w");
+        if (!file) {
+            perror("fopen error");
+            char error_response[512];
+            snprintf(error_response, sizeof(error_response),
+                     "HTTP/1.1 500 Internal Server Error\r\n"
+                     "Content-Type: application/json\r\n"
+                     "%s\r\n"
+                     "{\"status\":\"error\",\"message\":\"Failed to retrieve room list\"}",
+                     cors_headers);
+            write(client_socket, error_response, strlen(error_response));
+            return;
+        }
+        fclose(file);
+        // 파일이 생성되었으므로 다시 읽기 모드로 열기
+        file = fopen(ROOM_LIST_FILE, "r");
+        if (!file) {
+            perror("fopen error");
+            char error_response[512];
+            snprintf(error_response, sizeof(error_response),
+                     "HTTP/1.1 500 Internal Server Error\r\n"
+                     "Content-Type: application/json\r\n"
+                     "%s\r\n"
+                     "{\"status\":\"error\",\"message\":\"Failed to retrieve room list\"}",
+                     cors_headers);
+            write(client_socket, error_response, strlen(error_response));
+            return;
+        }
     }
 
     cJSON *room_list_json = cJSON_CreateArray();
