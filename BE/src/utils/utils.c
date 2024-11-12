@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include "config.h"
 #include <string.h>
+#include <sys/stat.h>
+#include <errno.h>
 
 
 // JSON 파싱 및 출력 함수
@@ -80,4 +82,26 @@ int get_user_id_by_token(const char* token) {
 
     fclose(file);
     return user_id;
+}
+
+// 폴더 생성 함수
+void create_directory(const char *path) {
+    if (mkdir(path, 0777) == -1) {
+        if (errno == EEXIST) {
+            printf("Directory %s already exists\n", path);
+        } else {
+            perror("mkdir failed");
+        }
+    } else {
+        printf("Directory %s created\n", path);
+    }
+}
+
+// 데이터 폴더 구조 초기화
+void initialize_data_directories() {
+    create_directory("../data");
+    create_directory("../data/user");
+    create_directory("../data/rooms");
+    create_directory("../data/game");
+    create_directory("../data/chat");
 }
