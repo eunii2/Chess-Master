@@ -52,9 +52,8 @@ void manage_rooms() {
                         }
                     }
                     closedir(d);
-                } else {
+                } else
                     fprintf(stderr, "Error opening directory: %s\n", strerror(errno));
-                }
                 break;
             }
             case 2:
@@ -62,9 +61,8 @@ void manage_rooms() {
                 scanf("%s", room_id);
                 if (rmdir(room_id) == 0) {
                     printf("게임방 '%s'이(가) 삭제되었습니다.\n", room_id);
-                } else {
+                } else
                     fprintf(stderr, "Error deleting room '%s': %s\n", room_id, strerror(errno));
-                }
                 break;
             case 3:
                 printf("변경할 게임방 아이디를 입력하세요: ");
@@ -76,11 +74,10 @@ void manage_rooms() {
                 if (check_dir != NULL) {
                     printf("이미 존재하는 게임방 아이디 '%s'입니다. 다른 이름을 입력하세요.\n", new_room_id);
                     closedir(check_dir);
-                } else if (rename(room_id, new_room_id) == 0) {
+                } else if (rename(room_id, new_room_id) == 0)
                     printf("게임방 아이디가 '%s'에서 '%s'으로 변경되었습니다.\n", room_id, new_room_id);
-                } else {
+                 else
                     fprintf(stderr, "Error renaming room '%s' to '%s': %s\n", room_id, new_room_id, strerror(errno));
-                }
                 break;
             case 4:
                 list_room_details();
@@ -115,15 +112,13 @@ void list_room_details() {
                     printf("  - 생성 시간: %s", ctime(&file_stat.st_ctime));
                     printf("  - 마지막 수정 시간: %s", ctime(&file_stat.st_mtime));
                     printf("  - 접근 권한: %o\n", file_stat.st_mode & 0777);
-                } else {
+                } else
                     perror("Error getting file details");
-                }
             }
         }
         closedir(d);
-    } else {
+    } else
         fprintf(stderr, "Error opening directory: %s\n", strerror(errno));
-    }
 }
 
 
@@ -138,9 +133,9 @@ void change_room_permission() {
 
     if (chmod(room_id, permission) == 0) {
         printf("게임방 '%s'의 권한이 %o로 변경되었습니다.\n", room_id, permission);
-    } else {
+    } else
         fprintf(stderr, "Error changing permissions for room '%s': %s\n", room_id, strerror(errno));
-    }
+
 }
 
 void show_room_size() {
@@ -170,7 +165,7 @@ void show_room_size() {
         closedir(d);
         printf("게임방 '%s'의 파일 개수: %d\n", room_id, file_count);
         printf("총 크기: %ld bytes\n", total_size);
-    } else {
+    } else
         fprintf(stderr, "Error opening room '%s': %s\n", room_id, strerror(errno));
-    }
+
 }

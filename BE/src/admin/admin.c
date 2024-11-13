@@ -1,6 +1,7 @@
 #include "admin.h"
 #include<stdio.h>
 #include<string.h>
+#include <stdlib.h>
 
 void admin_menu() {
 
@@ -42,7 +43,7 @@ void admin_menu() {
         printf("\n========== 관리자 메뉴 ==========\n");
         printf("1. 서버 정보 조회\n");
         printf("2. 방 관리 기능\n");
-        printf("3. 사용자 목록 조회\n");
+        printf("3. 시스템 명령 실행\n");
         printf("4. 사용자 강제 퇴장\n");
         printf("5. 서버 종료\n");
         printf("100. 관리자 모드 종료\n");
@@ -62,10 +63,22 @@ void admin_menu() {
             case 2:
                 manage_rooms();
                 break;
-            case 3:
-                printf("사용자 목록을 조회합니다...\n");
-                // 사용자 목록 조회 기능 구현
+            case 3: {
+                char command[256];
+                printf("실행할 시스템 명령어를 입력하세요(리눅스 명령) : ");
+                while (getchar() != '\n');
+                fgets(command, sizeof(command), stdin);
+                command[strcspn(command, "\n")] = '\0';
+
+                if (strlen(command) > 0) {
+                    int result = system(command);
+                    if (result == -1)
+                        perror("명령 실행 오류");
+                } else
+                    printf("명령어가 입력되지 않았습니다.\n");
+
                 break;
+            }
             case 4:
                 printf("강제 퇴장할 사용자를 선택하세요...\n");
                 // 사용자 강제 퇴장 기능 구현
