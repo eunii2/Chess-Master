@@ -3,7 +3,5 @@
 .idea/
 cmake-build-debug/
 cmake-build-release/
-../CMakeLists.txt
 
 *.txt
-.vscode/BE/CMakeLists.txt

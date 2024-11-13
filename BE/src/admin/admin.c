@@ -40,8 +40,8 @@ void admin_menu() {
     int choice;
     while (1) {
         printf("\n========== 관리자 메뉴 ==========\n");
-        printf("1. 방 목록 조회\n");
-        printf("2. 방 삭제\n");
+        printf("1. 서버 정보 조회\n");
+        printf("2. 방 목록 조회\n");
         printf("3. 사용자 목록 조회\n");
         printf("4. 사용자 강제 퇴장\n");
         printf("5. 서버 종료\n");
@@ -58,7 +58,7 @@ void admin_menu() {
         switch (choice) {
             case 1:
                 printf("방 목록을 조회합니다...\n");
-                // 방 목록 조회 기능 구현
+                get_server_info();
                 break;
             case 2:
                 printf("삭제할 방을 선택하세요...\n");
