@@ -39,6 +39,7 @@ add_executable(chess_server
         src/auth/user_join.c
         src/auth/user_login.c
         src/admin/server_info.c
+        src/admin/room_manage.c
 )
 
 # dd 라이브러리 링크
