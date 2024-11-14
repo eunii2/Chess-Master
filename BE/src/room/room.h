@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "util.h" // 유저 ID 확인 함수가 정의된 헤더 파일
+#include "utils.h"
 #include "cJSON.h" // JSON 파싱을 위한 헤더 파일
 #include <unistd.h>  // POSIX 호환 함수들
 

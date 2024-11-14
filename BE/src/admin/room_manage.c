@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <time.h>
-
+#include <errno.h>
 
 void change_room_permission();
 void list_room_details();
