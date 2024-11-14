@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <sys/utsname.h>
 #include <unistd.h>
+#include <errno.h>
+#include <string.h>
 #include "admin.h"
 
 void get_server_info() {
@@ -15,6 +17,6 @@ void get_server_info() {
         printf("현재 폴더 위치: %s\n", getcwd(NULL, 0));
         printf("==============================\n\n");
     } else {
-        perror("uname");
+        fprintf(stderr, "Error getting system information: %s\n", strerror(errno));
     }
 }
