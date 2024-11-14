@@ -13,6 +13,8 @@
 
 extern const char *cors_headers;
 
+// 로그 파일 경로 포맷 정의
+#define LOG_FILE_PATH_FORMAT "../data/game/%d/game_log.txt"
 
 // 토큰 길이 정의
 #define TOKEN_LENGTH 32
