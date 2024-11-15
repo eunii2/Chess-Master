@@ -14,7 +14,7 @@ cJSON *parse_json(const char *json_string) {
     cJSON *json = cJSON_Parse(json_string);
     if (json == NULL) {
         const char *error_ptr = cJSON_GetErrorPtr();
-        if (error_ptr != NULL) {
+        if (error_ptr == NULL) {
             fprintf(stderr, "JSON Parse Error before: %s\n", error_ptr);
         }
         return NULL;

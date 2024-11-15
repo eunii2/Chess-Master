@@ -1,8 +1,11 @@
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.1)
 project(chess_server)
 
 set(CMAKE_C_STANDARD 99)  # C 표준 버전을 설정
 set(CMAKE_CXX_STANDARD 14)
+
+find_package(Threads REQUIRED)
+
 
 # 소스 디렉토리 추가
 include_directories(src)
@@ -30,7 +33,6 @@ add_executable(chess_server
         src/server/handler.c
         src/utils/db.c
         src/utils/utils.c
-        src/admin/admin.c
         src/room/create_room.c
         src/room/join_room.c
         src/room/get_room_list.c
@@ -42,5 +44,5 @@ add_executable(chess_server
         src/admin/room_manage.c
 )
 
-# dd 라이브러리 링크
-target_link_libraries(chess_server PRIVATE cjson)
+# 라이브러리 링크
+target_link_libraries(chess_server PRIVATE cjson ${CMAKE_THREAD_LIBS_INIT})

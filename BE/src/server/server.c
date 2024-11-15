@@ -7,19 +7,28 @@
 #include "handler.h"
 #include "utils.h"
 #include "cJSON.h"
+#include "admin.h"
+#include <pthread.h>
+
 
 void server_run() {
     printf("Server initializing...\n");
 
-    int server_socket, client_socket;
+    // 서버 소켓 생성 및 초기화
+    int server_socket;
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_addr_size = sizeof(client_addr);
-    char buffer[BUFFER_SIZE];
 
-    // 서버 소켓 생성 및 초기화
     server_socket = socket(PF_INET, SOCK_STREAM, 0);
     if (server_socket == -1) {
         perror("socket error");
+        exit(1);
+    }
+
+    int opt = 1;
+    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        perror("setsockopt error");
+        close(server_socket);
         exit(1);
     }
 
@@ -41,41 +50,161 @@ void server_run() {
     }
     printf("Server is running on port %d\n", SERVER_PORT);
 
-    // 클라이언트 연결 처리
+
+    // admin 소켓 생성 및 초기화
+    int admin_server_socket;
+    struct sockaddr_in admin_server_addr;
+    admin_server_socket = socket(PF_INET, SOCK_STREAM, 0);
+    if (admin_server_socket == -1) {
+        perror("admin socket error");
+        exit(1);
+    }
+
+    if (setsockopt(admin_server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        perror("setsockopt error");
+        close(admin_server_socket);
+        exit(1);
+    }
+
+    memset(&admin_server_addr, 0, sizeof(admin_server_addr));
+    admin_server_addr.sin_family = AF_INET;
+    admin_server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    admin_server_addr.sin_port = htons(ADMIN_PORT);
+
+    if (bind(admin_server_socket, (struct sockaddr*)&admin_server_addr, sizeof(admin_server_addr)) == -1) {
+        perror("admin bind error");
+        close(admin_server_socket);
+        exit(1);
+    }
+    if (listen(admin_server_socket, 5) == -1) {
+        perror("admin listen error");
+        close(admin_server_socket);
+        exit(1);
+    }
+    printf("Admin server is running on port %d\n", ADMIN_PORT);
+
+
+
+
     while (1) {
-        client_socket = accept(server_socket, (struct sockaddr*)&client_addr, &client_addr_size);
-        if (client_socket == -1) {
-            perror("accept error");
-            continue;
+        fd_set reads;
+        FD_ZERO(&reads);
+        FD_SET(server_socket, &reads);
+        FD_SET(admin_server_socket, &reads);
+        int fd_max = (server_socket > admin_server_socket) ? server_socket : admin_server_socket;
+
+        if (select(fd_max + 1, &reads, 0, 0, NULL) == -1) {
+            perror("select error");
+            break;
         }
 
-        // 데이터 수신
-        int str_len = read(client_socket, buffer, BUFFER_SIZE - 1);
-        if (str_len < 0) {
-            perror("read error");
-            close(client_socket);
-            continue;
-        }
-        buffer[str_len] = 0; // 널 문자 삽입
+        if (FD_ISSET(server_socket, &reads)) {
+            int *client_socket_ptr = malloc(sizeof(int));
+            *client_socket_ptr = accept(server_socket, (struct sockaddr*)&client_addr, &client_addr_size);
+            if (*client_socket_ptr == -1) {
+                perror("accept error");
+                free(client_socket_ptr);
+                continue;
+            }
 
-        // HTTP 메서드와 경로 추출
-        char method[8];
-        char path[256];
-        sscanf(buffer, "%s %s", method, path);
+            pthread_t tid;
+            if (pthread_create(&tid, NULL, client_handler, (void *)client_socket_ptr) != 0) {
+                perror("pthread_create error");
+                close(*client_socket_ptr);
+                free(client_socket_ptr);
+                continue;
+            }
 
-        printf("Received request: [%s] %s\n", method, path);
-
-        // JSON 본문 추출
-        char *json_start = strstr(buffer, "\r\n\r\n");
-        cJSON *json_request = NULL;
-        if (json_start) {
-            json_start += 4;  // "\r\n\r\n" 이후로 이동
-            json_request = parse_json(json_start);  // JSON 파싱
+            pthread_detach(tid);
         }
 
-        // 요청 핸들링
-        handle_request(client_socket, method, path, json_request);
+        if (FD_ISSET(admin_server_socket, &reads)) {
+            // 관리자 클라이언트 처리
+            int *admin_socket_ptr = malloc(sizeof(int));
+            *admin_socket_ptr = accept(admin_server_socket, (struct sockaddr*)&client_addr, &client_addr_size);
+            if (*admin_socket_ptr == -1) {
+                perror("admin accept error");
+                free(admin_socket_ptr);
+                continue;
+            }
 
-        close(client_socket);  // 클라이언트 소켓 닫기
+            pthread_t tid;
+            if (pthread_create(&tid, NULL, admin_handler, (void *)admin_socket_ptr) != 0) {
+                perror("admin pthread_create error");
+                close(*admin_socket_ptr);
+                free(admin_socket_ptr);
+                continue;
+            }
+            pthread_detach(tid);
+        }
+    }
+}
+
+
+void *client_handler(void *arg) {
+    int client_socket = *(int *)arg;
+    free(arg);
+
+    char buffer[BUFFER_SIZE];
+
+    int str_len = read(client_socket, buffer, BUFFER_SIZE - 1);
+    if (str_len < 0) {
+        perror("read error");
+        close(client_socket);
+        pthread_exit(NULL);
+    }
+    buffer[str_len] = 0; // 널 문자 삽입
+
+    char method[8];
+    char path[256];
+    sscanf(buffer, "%s %s", method, path);
+
+    printf("Received request: [%s] %s\n", method, path);
+
+    char *json_start = strstr(buffer, "\r\n\r\n");
+    cJSON *json_request = NULL;
+    if (json_start) {
+        json_start += 4;
+        json_request = parse_json(json_start);
+    }
+
+    // 요청 핸들링
+    handle_request(client_socket, method, path, json_request);
+
+    close(client_socket);
+    pthread_exit(NULL);
+}
+
+void *admin_handler(void *arg) {
+    int admin_socket = *(int *)arg;
+    free(arg);
+
+    char buffer[BUFFER_SIZE];
+
+    while (1) {
+        int str_len = recv(admin_socket, buffer, BUFFER_SIZE - 1, 0);
+        if (str_len <= 0) {
+            perror("recv error or admin disconnected");
+            close(admin_socket);
+            pthread_exit(NULL);
+        }
+        buffer[str_len] = 0;
+
+        // 관리자 명령 처리
+        if (strcmp(buffer, "1") == 0) {
+            // 서버 정보 조회
+            char *info = get_server_info();
+            send(admin_socket, info, strlen(info), 0);
+            free(info);
+        } else if (strcmp(buffer, "2") == 0) {
+            // 방 관리 기능
+            manage_rooms(admin_socket);
+        } else if (strcmp(buffer, "5") == 0) {
+            // 서버 종료
+            send(admin_socket, "서버를 종료합니다...\n", strlen("서버를 종료합니다...\n"), 0);
+            exit(0);  // 서버 종료
+        } else {
+            send(admin_socket, "알 수 없는 명령입니다.\n", strlen("알 수 없는 명령입니다.\n"), 0);
+        }
     }
 }
