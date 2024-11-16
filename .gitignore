@@ -3,3 +3,9 @@
 .idea/
 cmake-build-debug/
 cmake-build-release/
+
+.DS_Store
+.vscode/
+BE/build/
+BE/data/rooms/
+BE/data/user/
