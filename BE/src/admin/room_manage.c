@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include "server.h"
+#include <stdlib.h>
 
 void change_room_permission(int admin_socket);
 void list_room_details(int admin_socket);

@@ -12,5 +12,7 @@ void set_forfeit(int* forfeit);
 // 핸들러 함수
 void start_game_handler(int client_socket, cJSON *json_request);
 void forfeit_game_handler(int client_socket, cJSON *json_request);
+void get_game_status_handler(int client_socket, cJSON *json_request);
+void move_piece_handler(int client_socket, cJSON *json_request);
 
 #endif
