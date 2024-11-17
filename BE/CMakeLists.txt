@@ -27,7 +27,6 @@ add_subdirectory(libs/cJSON)
 add_executable(chess_server
         src/main.c
         src/chat/chat.c
-        src/game/game.c
         src/record/record.c
         src/server/server.c
         src/server/handler.c
@@ -42,6 +41,12 @@ add_executable(chess_server
         src/auth/user_login.c
         src/admin/server_info.c
         src/admin/room_manage.c
+        src/game/forfeit.c
+        src/game/start_game.c
+        src/game/game_thread.c
+        src/game/game.h
+        src/game/move_piece.c
+        src/game/get_game_status.c
 )
 
 # 라이브러리 링크
