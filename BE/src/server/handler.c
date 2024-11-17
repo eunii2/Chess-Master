@@ -4,6 +4,7 @@
 #include "cJSON.h"
 #include "auth.h"
 #include "room.h"
+#include "game.h"
 
 void handle_request(int client_socket, const char *method, const char *path, cJSON *json_request) {
 
@@ -49,7 +50,19 @@ void handle_request(int client_socket, const char *method, const char *path, cJS
         get_room_status_handler(client_socket, json_request);
     }
     // 추가적인 경로 및 메서드에 대한 처리
-
+    //게임 API 핸들러
+    else if (strcmp(method, "POST") == 0 && strcmp(path, "/api/start_game") == 0) {
+        start_game_handler(client_socket, json_request);
+    }
+    else if (strcmp(method, "POST") == 0 && strcmp(path, "/api/get_game_status") == 0) {
+        get_game_status_handler(client_socket, json_request);
+    }
+    else if (strcmp(method, "POST") == 0 && strcmp(path, "/api/move_piece") == 0) {
+        move_piece_handler(client_socket, json_request);
+    }
+    else if (strcmp(method, "POST") == 0 && strcmp(path, "/api/forfeit") == 0) {
+        forfeit_game_handler(client_socket, json_request);
+    }
 
     else {
         // 지원하지 않는 요청에 대한 404 응답
