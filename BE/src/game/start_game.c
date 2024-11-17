@@ -10,6 +10,10 @@
 void start_game_in_room(int room_id) {
     pthread_t thread;
     int* args = malloc(2 * sizeof(int));
+    if (!args) {
+        perror("malloc failed");
+        return;
+    }
     args[0] = room_id;
     args[1] = 0;
 
@@ -19,6 +23,7 @@ void start_game_in_room(int room_id) {
         return;
     }
 
+    // 스레드를 분리하여 실행
     pthread_detach(thread);
     printf("Game thread for room %d started\n", room_id);
 }
@@ -27,8 +32,11 @@ void start_game_handler(int client_socket, cJSON *json_request) {
     const cJSON *room_id_json = cJSON_GetObjectItemCaseSensitive(json_request, "room_id");
 
     if (!cJSON_IsNumber(room_id_json)) {
-        const char *error_response =
-                "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\n\r\nInvalid room_id";
+        char error_response[512];
+        snprintf(error_response, sizeof(error_response),
+                 "HTTP/1.1 400 Bad Request\r\n"
+                 "Content-Type: application/json\r\n\r\n"
+                 "{\"status\":\"error\",\"message\":\"Invalid room_id\"}");
         write(client_socket, error_response, strlen(error_response));
         return;
     }

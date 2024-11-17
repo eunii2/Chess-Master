@@ -17,7 +17,7 @@ int main() {
 
     // 특정 조건에서 게임을 시작하는 예시 (테스트용으로 추가)
     int room_id = 1;
-    start_game(room_id);  // 게임 시작 함수 호출
+    start_game_in_room(room_id);  // 게임 시작 함수 호출
 
     return 0;
 }
