@@ -19,6 +19,24 @@ static char chessboard[8][8] = {
         {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}
 };
 
+// 게임 종료 여부
+bool is_game_over = false;
+
+// 킹 잡힘 여부 확인 함수
+bool is_king_captured() {
+    bool white_king_exists = false;
+    bool black_king_exists = false;
+
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            if (chessboard[row][col] == 'K') white_king_exists = true;
+            if (chessboard[row][col] == 'k') black_king_exists = true;
+        }
+    }
+
+    return !(white_king_exists && black_king_exists); // 킹 둘 중 하나라도 없으면 true 반환
+}
+
 // 퀸 이동 규칙 (대각선, 직선)
 bool is_valid_queen_move(int from_row, int from_col, int to_row, int to_col) {
     return is_valid_rook_move(from_row, from_col, to_row, to_col) ||
@@ -134,9 +152,22 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 체스판 상태 업데이트
     chessboard[to_row][to_col] = piece;
     chessboard[from_row][from_col] = ' ';
 
+    // 킹이 잡혔는지 확인
+    if (is_king_captured()) {
+        is_game_over = true;
+
+        const char *end_response =
+                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\":\"success\",\"message\":\"King captured. Game over\"}";
+        write(client_socket, end_response, strlen(end_response));
+        printf("Game over: A king has been captured.\n");
+        return;
+    }
+
+    // 성공 응답 반환
     char success_response[512];
     snprintf(success_response, sizeof(success_response),
              "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\":\"success\",\"message\":\"Move successful\"}");
