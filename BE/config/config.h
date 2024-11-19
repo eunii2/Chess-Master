@@ -20,4 +20,7 @@ extern const char *cors_headers;
 // 토큰 길이 정의
 #define TOKEN_LENGTH 32
 
+#include <stdbool.h>
+extern bool is_game_over;
+
 #endif //SERVER_PROJECT_CONFIG_H

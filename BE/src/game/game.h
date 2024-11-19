@@ -8,7 +8,7 @@
 // 게임 로직 함수
 void* game_thread(void* arg);
 void start_game_in_room(int room_id);
-void set_forfeit(int* forfeit);
+void set_forfeit();
 
 // 핸들러 함수
 void start_game_handler(int client_socket, cJSON *json_request);
