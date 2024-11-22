@@ -84,6 +84,40 @@ int get_user_id_by_token(const char* token) {
     return user_id;
 }
 
+char* get_user_name_by_token(const char* token) {
+    if (!token) return NULL;
+
+    FILE *file = fopen(USER_LIST_FILE, "r");
+    if (!file) {
+        perror("fopen error");
+        return NULL;
+    }
+
+    char buffer[512];
+    static char user_name[100];
+    memset(user_name, 0, sizeof(user_name));
+
+    while (fgets(buffer, sizeof(buffer), file)) {
+        char *token_pos = strstr(buffer, "Token: ");
+        if (token_pos) {
+            char current_token[TOKEN_LENGTH + 1];
+            sscanf(token_pos + strlen("Token: "), "%s", current_token);
+
+            if (strcmp(current_token, token) == 0) {
+                char *name_pos = strstr(buffer, "Name: ");
+                if (name_pos) {
+                    sscanf(name_pos + strlen("Name: "), "%s", user_name);
+                    fclose(file);
+                    return user_name;
+                }
+            }
+        }
+    }
+
+    fclose(file);
+    return NULL;
+}
+
 // 폴더 생성 함수
 void create_directory(const char *path) {
     if (mkdir(path, 0777) == -1) {
@@ -96,6 +130,8 @@ void create_directory(const char *path) {
         printf("Directory %s created\n", path);
     }
 }
+
+
 
 // 데이터 폴더 구조 초기화
 void initialize_data_directories() {

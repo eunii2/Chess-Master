@@ -7,7 +7,6 @@
 #include "image.h"
 #include "utils.h"
 
-
 void image_upload_handler(int client_socket, cJSON *json_request) {
     const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
     const cJSON *image_address_json = cJSON_GetObjectItemCaseSensitive(json_request, "image_address");
@@ -90,11 +89,14 @@ void image_upload_handler(int client_socket, cJSON *json_request) {
     // 유저 리스트 정렬 (user_id의 오름차순)
     qsort(user_list.entries, user_list.size, sizeof(UserEntry), compare_user_entries);
 
-    // 유저 리스트 저장
-    save_user_list(&user_list);
-
-    // 메모리 해제
-    free_user_list(&user_list);
+    // 본인의 프로필 사진 URL 생성
+    const char *user_profile_image = NULL;
+    for (size_t i = 0; i < user_list.size; i++) {
+        if (user_list.entries[i].user_id == user_id) {
+            user_profile_image = user_list.entries[i].image_address;
+            break;
+        }
+    }
 
     // 성공 응답
     char success_response[MAX_BUFFER_SIZE];
@@ -102,9 +104,16 @@ void image_upload_handler(int client_socket, cJSON *json_request) {
              "HTTP/1.1 200 OK\r\n"
              "Content-Type: application/json\r\n"
              "%s\r\n"
-             "{\"status\":\"success\",\"message\":\"User information updated successfully\"}",
-             cors_headers);
+             "{\"status\":\"success\",\"message\":\"User information updated successfully\","
+             "\"profile_image\":\"%s\"}",
+             cors_headers, user_profile_image ? user_profile_image : "null");
     write(client_socket, success_response, strlen(success_response));
+
+    // 유저 리스트 저장
+    save_user_list(&user_list);
+
+    // 메모리 해제
+    free_user_list(&user_list);
 }
 
 // 유저 리스트 로드 함수

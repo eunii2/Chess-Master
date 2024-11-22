@@ -1,6 +1,7 @@
 #include "room.h"
 #include "utils.h"
 #include "config.h"
+#include "image.h"
 
 void get_room_list_handler(int client_socket, cJSON *json_request) {
     const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
@@ -32,10 +33,38 @@ void get_room_list_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
-    // 파일을 읽기 모드로 열기
+    // 유저 리스트 로드
+    UserList user_list = {NULL, 0, 0};
+    load_user_list(&user_list);
+
+
+
+    // 응답 JSON 생성
+    cJSON *response_json = cJSON_CreateObject();
+    cJSON_AddStringToObject(response_json, "status", "success");
+
+
+    // 본인 프로필 사진 확인
+    const char *user_profile_image = NULL;
+    for (size_t i = 0; i < user_list.size; i++) {
+        if (user_list.entries[i].user_id == user_id) {
+            user_profile_image = user_list.entries[i].image_address;
+            break;
+        }
+    }
+
+    // 본인의 프로필 사진 추가
+    if (user_profile_image) {
+        printf("user_profile_image: %s\n", user_profile_image);
+        cJSON_AddStringToObject(response_json, "profile_image", user_profile_image);
+    } else {
+        cJSON_AddNullToObject(response_json, "profile_image");
+    }
+
+
+    // 방 리스트 파일 읽기
     FILE *file = fopen(ROOM_LIST_FILE, "r");
     if (!file) {
-        // 파일이 없어서 열 수 없는 경우, 생성 시도
         file = fopen(ROOM_LIST_FILE, "w");
         if (!file) {
             perror("fopen error");
@@ -47,10 +76,10 @@ void get_room_list_handler(int client_socket, cJSON *json_request) {
                      "{\"status\":\"error\",\"message\":\"Failed to retrieve room list\"}",
                      cors_headers);
             write(client_socket, error_response, strlen(error_response));
+            free_user_list(&user_list);
             return;
         }
         fclose(file);
-        // 파일이 생성되었으므로 다시 읽기 모드로 열기
         file = fopen(ROOM_LIST_FILE, "r");
         if (!file) {
             perror("fopen error");
@@ -62,6 +91,7 @@ void get_room_list_handler(int client_socket, cJSON *json_request) {
                      "{\"status\":\"error\",\"message\":\"Failed to retrieve room list\"}",
                      cors_headers);
             write(client_socket, error_response, strlen(error_response));
+            free_user_list(&user_list);
             return;
         }
     }
@@ -79,7 +109,6 @@ void get_room_list_handler(int client_socket, cJSON *json_request) {
                                 &room_id, room_name, &created_by, &joined_user_id);
 
         if (num_fields >= 3) {
-            // Set 'joined' status to true if the 'joined' field is present
             if (num_fields == 4) {
                 joined_status = 1;
             }
@@ -89,17 +118,35 @@ void get_room_list_handler(int client_socket, cJSON *json_request) {
             cJSON_AddStringToObject(room_json, "room_name", room_name);
             cJSON_AddBoolToObject(room_json, "joined", joined_status);
 
+            // 방을 만든 사람의 프로필 사진 및 이름 추가
+            const char *profile_image = NULL;
+            for (size_t i = 0; i < user_list.size; i++) {
+                if (user_list.entries[i].user_id == created_by) {
+                    profile_image = user_list.entries[i].image_address;
+                    break;
+                }
+            }
+
+            if (profile_image) {
+                cJSON_AddStringToObject(room_json, "profile_image", profile_image);
+            } else {
+                cJSON_AddNullToObject(room_json, "profile_image");
+            }
+
             cJSON_AddItemToArray(room_list_json, room_json);
         }
     }
     fclose(file);
 
-    cJSON *response_json = cJSON_CreateObject();
-    cJSON_AddStringToObject(response_json, "status", "success");
+    // 유저 리스트 메모리 해제
+    free_user_list(&user_list);
+
+
+
     cJSON_AddItemToObject(response_json, "rooms", room_list_json);
 
     const char *response_string = cJSON_PrintUnformatted(response_json);
-    char http_response[1024];
+    char http_response[2048];
     snprintf(http_response, sizeof(http_response),
              "HTTP/1.1 200 OK\r\n"
              "Content-Type: application/json\r\n"
