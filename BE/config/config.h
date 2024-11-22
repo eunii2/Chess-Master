@@ -12,6 +12,9 @@
 // 방 관련 디렉토리 및 파일 경로 정의
 #define ROOM_LIST_FILE "../data/rooms/room_list.txt"
 
+#define USER_IMAGE_FILE "../data/user_image.txt"
+
+
 extern const char *cors_headers;
 
 // 로그 파일 경로 포맷 정의

@@ -5,6 +5,7 @@
 #include "auth.h"
 #include "room.h"
 #include "game.h"
+#include "image.h"
 
 void handle_request(int client_socket, const char *method, const char *path, cJSON *json_request) {
 
@@ -49,7 +50,10 @@ void handle_request(int client_socket, const char *method, const char *path, cJS
         // 방 목록 조회 처리
         get_room_status_handler(client_socket, json_request);
     }
-    // 추가적인 경로 및 메서드에 대한 처리
+    // 이미지 업로드 API 핸들러
+    else if (strcmp(method, "POST") == 0 && strcmp(path, "/image/upload") == 0) {
+        image_upload_handler(client_socket, json_request);
+    }
     //게임 API 핸들러
     else if (strcmp(method, "POST") == 0 && strcmp(path, "/api/start_game") == 0) {
         start_game_handler(client_socket, json_request);
