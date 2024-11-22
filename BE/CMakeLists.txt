@@ -12,7 +12,7 @@ include_directories(src)
 include_directories(src/auth)
 include_directories(src/chat)
 include_directories(src/game)
-include_directories(src/record)
+include_directories(src/image)
 include_directories(src/room)
 include_directories(src/server)
 include_directories(src/utils)
@@ -27,7 +27,7 @@ add_subdirectory(libs/cJSON)
 add_executable(chess_server
         src/main.c
         src/chat/chat.c
-        src/record/record.c
+        src/image/image.c
         src/server/server.c
         src/server/handler.c
         src/utils/db.c
