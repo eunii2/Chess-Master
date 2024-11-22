@@ -259,4 +259,75 @@ export const ModalButton = styled.button`
       background: #f1f5f9;
     }
   `}
-`; 
+`;
+
+export const ProfileImage = styled.img`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+`;
+
+
+export const UserProfileImage = styled.img`
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-left: 5px;  // 간격을 조금 줄임
+`;
+
+export const CreatorProfileImage = styled.img`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-left: 10px;
+`;
+
+export const ProfileContainer = styled.div`
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    flex-shrink: 0;
+`;
+
+export const RoomNameContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+export const RoomProfileImage = styled.img`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+`;
+
+export const UploadArea = styled.div`
+  border: 2px dashed #94a3b8;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  color: #64748b;
+  position: relative;
+
+  &:hover {
+    background-color: #f1f5f9;
+  }
+`;
+
+export const UploadInput = styled.input`
+  display: none;
+`;
+
+export const UploadText = styled.p`
+  font-size: 1rem;
+  color: #64748b;
+`;
+
+export const UploadImage = styled.img`
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+`;
