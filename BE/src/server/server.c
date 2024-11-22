@@ -153,7 +153,7 @@ void *client_handler(void *arg) {
         close(client_socket);
         pthread_exit(NULL);
     }
-    buffer[str_len] = 0; // 널 문자 삽입
+    buffer[str_len] = 0;
 
     char method[8];
     char path[256];
@@ -168,12 +168,12 @@ void *client_handler(void *arg) {
         json_request = parse_json(json_start);
     }
 
-    // 요청 핸들링
     handle_request(client_socket, method, path, json_request);
 
     close(client_socket);
     pthread_exit(NULL);
 }
+
 
 void *admin_handler(void *arg) {
     int admin_socket = *(int *)arg;
@@ -190,21 +190,38 @@ void *admin_handler(void *arg) {
         }
         buffer[str_len] = 0;
 
-        // 관리자 명령 처리
-        if (strcmp(buffer, "1") == 0) {
-            // 서버 정보 조회
-            char *info = get_server_info();
-            send(admin_socket, info, strlen(info), 0);
-            free(info);
-        } else if (strcmp(buffer, "2") == 0) {
-            // 방 관리 기능
-            manage_rooms(admin_socket);
-        } else if (strcmp(buffer, "5") == 0) {
-            // 서버 종료
-            send(admin_socket, "서버를 종료합니다...\n", strlen("서버를 종료합니다...\n"), 0);
-            exit(0);  // 서버 종료
-        } else {
-            send(admin_socket, "알 수 없는 명령입니다.\n", strlen("알 수 없는 명령입니다.\n"), 0);
+        char *command_str = strtok(buffer, " ");
+        if (command_str == NULL) {
+            send(admin_socket, "Invalid command format.\n", strlen("Invalid command format.\n"), 0);
+            continue;
+        }
+
+        int command = atoi(command_str);
+        char *params = strtok(NULL, "");
+
+        switch (command) {
+            case 1:
+            {
+                char *info = get_server_info();
+                send(admin_socket, info, strlen(info), 0);
+                free(info);
+            }
+                break;
+            case 2:
+                manage_rooms(admin_socket, command, NULL);
+                break;
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+                manage_rooms(admin_socket, command, params);
+                break;
+            case 8:
+                send(admin_socket, "서버를 종료합니다...\n", strlen("서버를 종료합니다...\n"), 0);
+                exit(0);
+            default:
+                send(admin_socket, "알 수 없는 명령입니다.\n", strlen("알 수 없는 명령입니다.\n"), 0);
         }
     }
 }
