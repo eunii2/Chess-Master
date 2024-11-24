@@ -7,23 +7,20 @@
 #include "config.h"
 #include "cJSON.h"
 
-// 체스판 데이터 (8x8)
-static char chessboard[8][8] = {
-        {'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
-        {'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'},
-        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
-        {'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'},
-        {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}
-};
+void print_board() {
+    printf("Current Chessboard:\n");
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            printf("%c ", chessboard[row][col]);
+        }
+        printf("\n");
+    }
+}
 
 // 게임 종료 여부
 bool is_game_over = false;
 
-// 킹 잡힘 여부 확인 함수
-bool is_king_captured() {
+bool is_king_captured(char chessboard[8][8]) {
     bool white_king_exists = false;
     bool black_king_exists = false;
 
@@ -34,7 +31,8 @@ bool is_king_captured() {
         }
     }
 
-    return !(white_king_exists && black_king_exists); // 킹 둘 중 하나라도 없으면 true 반환
+    // 두 킹 중 하나가 없으면 true 반환
+    return !(white_king_exists && black_king_exists);
 }
 
 // 퀸 이동 규칙 (대각선, 직선)
@@ -84,26 +82,63 @@ bool is_valid_king_move(int from_row, int from_col, int to_row, int to_col) {
 }
 
 // 폰 이동 규칙 (전진 및 대각선 이동)
-bool is_valid_pawn_move(int from_row, int from_col, int to_row, int to_col, char piece) {
-    int direction = (piece == 'P') ? -1 : 1; // 백폰은 위로, 흑폰은 아래로
-    if (from_col == to_col) { // 전진
-        if (to_row - from_row == direction && chessboard[to_row][to_col] == ' ') return true;
-        if ((from_row == 1 && piece == 'p' && to_row - from_row == 2 * direction) ||
-            (from_row == 6 && piece == 'P' && to_row - from_row == 2 * direction)) {
-            return chessboard[from_row + direction][from_col] == ' ' &&
-                   chessboard[to_row][to_col] == ' ';
+bool is_valid_pawn_move(int from_row, int from_col, int to_row, int to_col, char piece, char chessboard[8][8]) {
+    int direction = (piece == 'P') ? -1 : 1; // 백폰은 위로(-1), 흑폰은 아래로(+1)
+
+    printf("Debug: Pawn at (%d, %d), target (%d, %d), direction: %d\n", from_row, from_col, to_row, to_col, direction);
+
+    // 1. **직진 이동**: 한 칸 전진
+    if (from_col == to_col) {
+        if (to_row - from_row == direction) {
+            if (chessboard[to_row][to_col] == ' ') {
+                printf("Debug: Valid one-step forward move.\n");
+                return true;
+            } else {
+                printf("Debug: Target cell (%d, %d) is not empty.\n", to_row, to_col);
+            }
+        } else {
+            printf("Debug: Invalid one-step forward move (direction mismatch).\n");
         }
-    } else if (abs(from_col - to_col) == 1 && to_row - from_row == direction) { // 대각선 공격
-        return chessboard[to_row][to_col] != ' ';
+
+        // 두 칸 전진 (초기 위치)
+        if ((from_row == 6 && piece == 'P' && to_row - from_row == 2 * direction) ||
+            (from_row == 1 && piece == 'p' && to_row - from_row == 2 * direction)) {
+            if (chessboard[from_row + direction][from_col] == ' ' && chessboard[to_row][to_col] == ' ') {
+                printf("Debug: Valid two-step forward move.\n");
+                return true;
+            } else {
+                printf("Debug: Path for two-step move is not clear.\n");
+            }
+        }
     }
+
+    // 2. **대각선 공격**
+    if (abs(from_col - to_col) == 1 && to_row - from_row == direction) {
+        char target = chessboard[to_row][to_col];
+        if (target != ' ' &&
+            ((piece == 'P' && target >= 'a' && target <= 'z') || // 백폰이 흑말을 공격
+             (piece == 'p' && target >= 'A' && target <= 'Z'))) { // 흑폰이 백말을 공격
+            printf("Debug: Valid diagonal attack move.\n");
+            return true;
+        } else {
+            printf("Debug: Invalid diagonal attack move. Target: '%c'\n", target);
+        }
+    }
+
+    // 3. **불가능한 이동**
+    printf("Error: Pawn move from (%d, %d) to (%d, %d) is invalid.\n", from_row, from_col, to_row, to_col);
     return false;
 }
 
 // 이동 유효성 확인 함수
-bool is_valid_move(int from_row, int from_col, int to_row, int to_col, char piece) {
+bool is_valid_move(int from_row, int from_col, int to_row, int to_col, char piece, char chessboard[8][8]) {
     char target_piece = chessboard[to_row][to_col];
     if ((piece >= 'A' && piece <= 'Z' && target_piece >= 'A' && target_piece <= 'Z') ||
         (piece >= 'a' && piece <= 'z' && target_piece >= 'a' && target_piece <= 'z')) {
+        // 디버깅 출력: 이동 정보 출력
+        printf("Debug: Checking move for piece '%c' from (%d, %d) to (%d, %d), target: '%c'\n",
+               piece, from_row, from_col, to_row, to_col, target_piece);
+
         return false; // 같은 팀이면 이동 불가
     }
 
@@ -113,22 +148,49 @@ bool is_valid_move(int from_row, int from_col, int to_row, int to_col, char piec
         case 'B': case 'b': return is_valid_bishop_move(from_row, from_col, to_row, to_col);
         case 'N': case 'n': return is_valid_knight_move(from_row, from_col, to_row, to_col);
         case 'K': case 'k': return is_valid_king_move(from_row, from_col, to_row, to_col);
-        case 'P': case 'p': return is_valid_pawn_move(from_row, from_col, to_row, to_col, piece);
+        case 'P': case 'p': return is_valid_pawn_move(from_row, from_col, to_row, to_col, piece, chessboard);
         default: return false;
     }
 }
 
 void move_piece_handler(int client_socket, cJSON *json_request) {
+    const cJSON *room_id_json = cJSON_GetObjectItemCaseSensitive(json_request, "room_id");
     const cJSON *from_position_json = cJSON_GetObjectItemCaseSensitive(json_request, "from_position");
     const cJSON *to_position_json = cJSON_GetObjectItemCaseSensitive(json_request, "to_position");
+    const cJSON *player_id_json = cJSON_GetObjectItemCaseSensitive(json_request, "player_id");
 
-    if (!cJSON_IsString(from_position_json) || !cJSON_IsString(to_position_json)) {
+    // JSON 유효성 검사
+    if (!cJSON_IsNumber(room_id_json) || !cJSON_IsString(from_position_json) || !cJSON_IsString(to_position_json) || !cJSON_IsNumber(player_id_json)) {
         const char *error_response =
                 "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Invalid input\"}";
         write(client_socket, error_response, strlen(error_response));
         return;
     }
 
+    int room_id = room_id_json->valueint;
+    int player_id = player_id_json->valueint;
+
+    // 게임 상태 가져오기
+    GameState *game_state = get_game_state(room_id);
+    if (!game_state) {
+        const char *error_response =
+                "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Room not found\"}";
+        write(client_socket, error_response, strlen(error_response));
+        return;
+    }
+
+    // 게임 종료 여부 확인
+    if (game_state->game_over) {
+        const char *error_response =
+                "HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Game is already over\"}";
+        write(client_socket, error_response, strlen(error_response));
+        printf("Move attempt in room %d rejected: Game is already over.\n", room_id);
+        return;
+    }
+
+    char (*chessboard)[8] = game_state->board;
+
+    // 체스판 위치 변환
     const char *from_position = from_position_json->valuestring;
     const char *to_position = to_position_json->valuestring;
 
@@ -138,14 +200,29 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
     int to_col = to_position[0] - 'a';
 
     char piece = chessboard[from_row][from_col];
+    printf("Attempting to move piece '%c' from %s to %s\n", piece, from_position, to_position);
+
+    // 유효하지 않은 소스 확인
     if (piece == ' ') {
+        printf("Error: No piece at the source position (%s)\n", from_position);
         const char *error_response =
                 "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"No piece at source\"}";
         write(client_socket, error_response, strlen(error_response));
         return;
     }
 
-    if (!is_valid_move(from_row, from_col, to_row, to_col, piece)) {
+    // 현재 플레이어 확인
+    if (game_state->current_player != player_id) {
+        printf("Error: It is not player %d's turn\n", player_id);
+        const char *error_response =
+                "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Not your turn\"}";
+        write(client_socket, error_response, strlen(error_response));
+        return;
+    }
+
+    // 이동 유효성 검사
+    if (!is_valid_move(from_row, from_col, to_row, to_col, piece, chessboard)) {
+        printf("Error: Invalid move from (%d, %d) to (%d, %d)\n", from_row, from_col, to_row, to_col);
         const char *error_response =
                 "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Invalid move\"}";
         write(client_socket, error_response, strlen(error_response));
@@ -157,8 +234,8 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
     chessboard[from_row][from_col] = ' ';
 
     // 킹이 잡혔는지 확인
-    if (is_king_captured()) {
-        is_game_over = true;
+    if (is_king_captured(chessboard)) {
+        game_state->game_over = 1;
 
         const char *end_response =
                 "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\":\"success\",\"message\":\"King captured. Game over\"}";
@@ -166,6 +243,9 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
         printf("Game over: A king has been captured.\n");
         return;
     }
+
+    // 턴 변경
+    game_state->current_player = (game_state->current_player == 1) ? 2 : 1;
 
     // 성공 응답 반환
     char success_response[512];

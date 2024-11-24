@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "cJSON.h"
+#include "config.h"
 
 // 게임 상태 구조체 정의
 typedef struct {
@@ -23,10 +24,16 @@ void initialize_game_states() {
 
     for (int i = 0; i < 10; i++) {
         game_states[i].room_id = i + 1;
-        memset(game_states[i].board, '.', sizeof(game_states[i].board));
-        game_states[i].current_player = 1;
-        game_states[i].remaining_time = 60;
-        game_states[i].game_over = 0;
+
+        // 체스판을 빈 상태로 초기화
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                game_states[i].board[row][col] = '.'; // 빈 칸은 '.'으로 표시
+            }
+        }
+        game_states[i].current_player = 1;   // 초기 플레이어 설정
+        game_states[i].remaining_time = 60; // 초기 남은 시간 설정
+        game_states[i].game_over = 0;       // 초기 상태: 게임 진행 중
     }
 
     initialized = 1;
@@ -74,10 +81,13 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     cJSON_AddNumberToObject(response_json, "remaining_time", game_state->remaining_time);
     cJSON_AddBoolToObject(response_json, "game_over", game_state->game_over);
 
-    // 체스판 상태를 JSON 배열로 추가
+// 체스판 상태를 JSON 배열로 추가
     cJSON *board_array = cJSON_CreateArray();
     for (int i = 0; i < 8; i++) {
-        cJSON_AddItemToArray(board_array, cJSON_CreateString(game_state->board[i]));
+        char row[9]; // 각 행은 최대 8개의 문자 + NULL
+        strncpy(row, game_state->board[i], 8);
+        row[8] = '\0'; // 문자열 종료
+        cJSON_AddItemToArray(board_array, cJSON_CreateString(row));
     }
     cJSON_AddItemToObject(response_json, "board", board_array);
 
