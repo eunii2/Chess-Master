@@ -81,54 +81,42 @@ bool is_valid_king_move(int from_row, int from_col, int to_row, int to_col) {
     return abs(from_row - to_row) <= 1 && abs(from_col - to_col) <= 1;
 }
 
-// 폰 이동 규칙 (전진 및 대각선 이동)
+// 폰 이동 규칙 (전진 및 대각선 공격)
 bool is_valid_pawn_move(int from_row, int from_col, int to_row, int to_col, char piece, char chessboard[8][8]) {
-    int direction = (piece == 'P') ? -1 : 1; // 백폰은 위로(-1), 흑폰은 아래로(+1)
-
+    int direction = (piece == 'P') ? -1 : 1; // 백폰: 위로(-1), 흑폰: 아래로(+1)
     printf("Debug: Pawn at (%d, %d), target (%d, %d), direction: %d\n", from_row, from_col, to_row, to_col, direction);
 
-    // 1. **직진 이동**: 한 칸 전진
+    // 직진 이동
     if (from_col == to_col) {
-        if (to_row - from_row == direction) {
-            if (chessboard[to_row][to_col] == ' ') {
-                printf("Debug: Valid one-step forward move.\n");
-                return true;
-            } else {
-                printf("Debug: Target cell (%d, %d) is not empty.\n", to_row, to_col);
-            }
-        } else {
-            printf("Debug: Invalid one-step forward move (direction mismatch).\n");
+        if (to_row - from_row == direction && chessboard[to_row][to_col] == ' ') {
+            printf("Debug: Valid one-step forward move.\n");
+            return true;
         }
 
-        // 두 칸 전진 (초기 위치)
         if ((from_row == 6 && piece == 'P' && to_row - from_row == 2 * direction) ||
             (from_row == 1 && piece == 'p' && to_row - from_row == 2 * direction)) {
             if (chessboard[from_row + direction][from_col] == ' ' && chessboard[to_row][to_col] == ' ') {
                 printf("Debug: Valid two-step forward move.\n");
                 return true;
-            } else {
-                printf("Debug: Path for two-step move is not clear.\n");
             }
         }
     }
 
-    // 2. **대각선 공격**
+    // **대각선 공격** 추가됨
     if (abs(from_col - to_col) == 1 && to_row - from_row == direction) {
         char target = chessboard[to_row][to_col];
         if (target != ' ' &&
-            ((piece == 'P' && target >= 'a' && target <= 'z') || // 백폰이 흑말을 공격
-             (piece == 'p' && target >= 'A' && target <= 'Z'))) { // 흑폰이 백말을 공격
-            printf("Debug: Valid diagonal attack move.\n");
+            ((piece == 'P' && target >= 'a' && target <= 'z') || // 백폰이 흑말 공격
+             (piece == 'p' && target >= 'A' && target <= 'Z'))) { // 흑폰이 백말 공격
+            printf("Debug: Valid diagonal attack move. Capturing '%c'.\n", target);
             return true;
-        } else {
-            printf("Debug: Invalid diagonal attack move. Target: '%c'\n", target);
         }
     }
 
-    // 3. **불가능한 이동**
     printf("Error: Pawn move from (%d, %d) to (%d, %d) is invalid.\n", from_row, from_col, to_row, to_col);
     return false;
 }
+
 
 // 이동 유효성 확인 함수
 bool is_valid_move(int from_row, int from_col, int to_row, int to_col, char piece, char chessboard[8][8]) {
