@@ -10,7 +10,7 @@ BE
 │   ├── image                  # 이미지 링크 
 │   ├── rooms                  # 게임 방 데이터
 │   └── user                   # 유저 데이터
-│       └── user_image.txt
+│   └── user_image.txt
 ├── libs                      # cJSON을 포함한 라이브러리
 ├── src
 │   ├── admin                 # 관리자 기능
