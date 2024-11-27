@@ -19,7 +19,7 @@ void server_run() {
     struct sockaddr_in server_addr, client_addr;
     socklen_t client_addr_size = sizeof(client_addr);
 
-    server_socket = socket(PF_INET, SOCK_STREAM, 0);
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket == -1) {
         perror("socket error");
         exit(1);
@@ -43,7 +43,7 @@ void server_run() {
         close(server_socket);
         exit(1);
     }
-    if (listen(server_socket, 5) == -1) {
+    if (listen(server_socket, 20) == -1) {
         perror("listen error");
         close(server_socket);
         exit(1);
@@ -54,7 +54,7 @@ void server_run() {
     // admin 소켓 생성 및 초기화
     int admin_server_socket;
     struct sockaddr_in admin_server_addr;
-    admin_server_socket = socket(PF_INET, SOCK_STREAM, 0);
+    admin_server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (admin_server_socket == -1) {
         perror("admin socket error");
         exit(1);
@@ -76,7 +76,7 @@ void server_run() {
         close(admin_server_socket);
         exit(1);
     }
-    if (listen(admin_server_socket, 5) == -1) {
+    if (listen(admin_server_socket, 3) == -1) {
         perror("admin listen error");
         close(admin_server_socket);
         exit(1);
