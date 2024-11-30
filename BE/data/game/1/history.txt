@@ -1,0 +1,66 @@
+Player: eunii moved P from e2 to e4
+Board state after move:
+r n b q k b n r 
+p p p p p p p p 
+                
+                
+        P       
+                
+P P P P   P P P 
+R N B Q K B N R 
+--------------------
+Player: hwan moved p from e7 to e5
+Board state after move:
+r n b q k b n r 
+p p p p   p p p 
+                
+        p       
+        P       
+                
+P P P P   P P P 
+R N B Q K B N R 
+--------------------
+Player: eunii moved P from d2 to d4
+Board state after move:
+r n b q k b n r 
+p p p p   p p p 
+                
+        p       
+      P P       
+                
+P P P     P P P 
+R N B Q K B N R 
+--------------------
+Player: hwan moved p from d7 to d5
+Board state after move:
+r n b q k b n r 
+p p p     p p p 
+                
+      p p       
+      P P       
+                
+P P P     P P P 
+R N B Q K B N R 
+--------------------
+Player: eunii moved N from b1 to c3
+Board state after move:
+r n b q k b n r 
+p p p     p p p 
+                
+      p p       
+      P P       
+    N           
+P P P     P P P 
+R   B Q K B N R 
+--------------------
+Player: hwan moved n from g8 to f6
+Board state after move:
+r n b q k b   r 
+p p p     p p p 
+          n     
+      p p       
+      P P       
+    N           
+P P P     P P P 
+R   B Q K B N R 
+--------------------

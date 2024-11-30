@@ -257,6 +257,29 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
     chessboard[to_row][to_col] = piece;
     chessboard[from_row][from_col] = ' ';
 
+    // 현재 플레이어의 사용자 이름 가져오기
+    char *player_name = get_user_name_by_token(token);
+
+    // **history.txt에 기록 추가**
+    char history_file[256];
+    snprintf(history_file, sizeof(history_file), GAME_HISTORY, room_id);
+
+    FILE *history = fopen(history_file, "a");
+    if (history) {
+        fprintf(history, "Player: %s moved %c from %s to %s\n",
+                player_name ? player_name : "Unknown", piece, from_position, to_position);
+
+        fprintf(history, "Board state after move:\n");
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                fprintf(history, "%c ", game_state->board[row][col]);
+            }
+            fprintf(history, "\n");
+        }
+        fprintf(history, "--------------------\n");
+        fclose(history);
+    }
+
     // 킹이 잡혔는지 확인
     if (is_king_captured(chessboard)) {
         game_state->game_over = 1;
