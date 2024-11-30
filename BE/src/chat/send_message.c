@@ -35,14 +35,15 @@ void send_message_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // **방에 참여한 플레이어인지 확인**
     const char *username = NULL;
     if (strcmp(game_state->player1_token, token) == 0) {
-        username = get_user_name_by_token(token);
+        username = get_user_name_by_token(token); // player1의 username 가져오기
     } else if (strcmp(game_state->player2_token, token) == 0) {
-        username = get_user_name_by_token(token);
+        username = get_user_name_by_token(token); // player2의 username 가져오기
     } else {
         const char *error_response =
-                "HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Invalid token\"}";
+                "HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Token not authorized for this room\"}";
         write(client_socket, error_response, strlen(error_response));
         return;
     }
