@@ -9,3 +9,4 @@ cmake-build-release/
 BE/build/
 BE/data/rooms/
 BE/data/user/
+BE/data/game/

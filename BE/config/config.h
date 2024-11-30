@@ -8,6 +8,7 @@
 // 데이터 디렉토리 경로 정의
 #define USER_DATA_DIR "../data/user/"
 #define USER_LIST_FILE "../data/user/user_list.txt"
+#define GAME_HISTORY "../data/game/%d/history.txt"
 
 // 방 관련 디렉토리 및 파일 경로 정의
 #define ROOM_LIST_FILE "../data/rooms/room_list.txt"

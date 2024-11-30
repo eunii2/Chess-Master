@@ -1,6 +1,7 @@
 #include "room.h"
 #include "utils.h"
 #include "config.h"
+#include "game.h"
 
 void create_room_handler(int client_socket, cJSON *json_request) {
     const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
@@ -96,6 +97,12 @@ void create_room_handler(int client_socket, cJSON *json_request) {
     static int last_room_id = 0;
     int room_id = ++last_room_id;
 
+    GameState *game_state = get_game_state(room_id);
+    if (game_state) {
+        strncpy(game_state->player1_token, token, TOKEN_LENGTH);
+        game_state->player1_token[TOKEN_LENGTH] = '\0';
+    }
+
     file = fopen(ROOM_LIST_FILE, "a");
     if (!file) {
         perror("fopen error");
@@ -117,8 +124,8 @@ void create_room_handler(int client_socket, cJSON *json_request) {
              "HTTP/1.1 201 Created\r\n"
              "Content-Type: application/json\r\n"
              "%s\r\n"
-             "{\"status\":\"success\",\"message\":\"Room created successfully\",\"room_id\":%d}",
-             cors_headers, room_id);
+             "{\"status\":\"success\",\"message\":\"Room created successfully\",\"room_id\":%d,\"host_token\":\"%s\"}",
+             cors_headers, room_id, token); // 방장의 토큰을 응답에 포함
     write(client_socket, success_response, strlen(success_response));
 }
 

@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include "cJSON.h"
 #include <stdbool.h>
+#include "../config/config.h"
 
 // GameState 구조체 정의
 typedef struct {
@@ -12,6 +13,9 @@ typedef struct {
     int current_player;        // 현재 턴 플레이어
     int remaining_time;        // 남은 시간 (초)
     int game_over;             // 게임 종료 여부
+    char player1_token[TOKEN_LENGTH + 1];
+    char player2_token[TOKEN_LENGTH + 1];
+    char current_player_token[TOKEN_LENGTH + 1]; // 현재 턴인 플레이어의 토큰
 } GameState;
 
 // 체스판 관련 전역 변수
@@ -30,10 +34,10 @@ void forfeit_game_handler(int client_socket, cJSON *json_request);
 void get_game_status_handler(int client_socket, cJSON *json_request);
 void move_piece_handler(int client_socket, cJSON *json_request);
 
-bool is_valid_rook_move(int from_row, int from_col, int to_row, int to_col);
-bool is_valid_bishop_move(int from_row, int from_col, int to_row, int to_col);
+bool is_valid_rook_move(int from_row, int from_col, int to_row, int to_col, char chessboard[8][8]);
+bool is_valid_bishop_move(int from_row, int from_col, int to_row, int to_col, char piece, char chessboard[8][8]);
 bool is_valid_knight_move(int from_row, int from_col, int to_row, int to_col);
-bool is_valid_queen_move(int from_row, int from_col, int to_row, int to_col);
+bool is_valid_queen_move(int from_row, int from_col, int to_row, int to_col, char piece, char chessboard[8][8]);
 bool is_valid_pawn_move(int from_row, int from_col, int to_row, int to_col, char piece, char chessboard[8][8]);
 bool is_valid_king_move(int from_row, int from_col, int to_row, int to_col);
 

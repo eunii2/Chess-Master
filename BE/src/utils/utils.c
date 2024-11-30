@@ -104,9 +104,9 @@ char* get_user_name_by_token(const char* token) {
             sscanf(token_pos + strlen("Token: "), "%s", current_token);
 
             if (strcmp(current_token, token) == 0) {
-                char *name_pos = strstr(buffer, "Name: ");
+                char *name_pos = strstr(buffer, "Username: ");
                 if (name_pos) {
-                    sscanf(name_pos + strlen("Name: "), "%s", user_name);
+                    sscanf(name_pos + strlen("Username: "), "%[^,]", user_name);
                     fclose(file);
                     return user_name;
                 }

@@ -1,6 +1,7 @@
 #include "room.h"
 #include "utils.h"
 #include "config.h"
+#include "game.h"
 
 void join_room_handler(int client_socket, cJSON *json_request) {
     const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
@@ -55,7 +56,6 @@ void join_room_handler(int client_socket, cJSON *json_request) {
     int line_count = 0;
 
     while (fgets(buffer, sizeof(buffer), file)) {
-        // 개행 문자 제거
         size_t len = strlen(buffer);
         if (len > 0 && buffer[len - 1] == '\n') {
             buffer[len - 1] = '\0';
@@ -104,6 +104,13 @@ void join_room_handler(int client_socket, cJSON *json_request) {
                     free(lines[i]);
                 }
                 return;
+            }
+
+            // GameState에 후공 플레이어의 토큰 추가
+            GameState *game_state = get_game_state(room_id);
+            if (game_state) {
+                strncpy(game_state->player2_token, token, TOKEN_LENGTH);
+                game_state->player2_token[TOKEN_LENGTH] = '\0';
             }
         }
 
