@@ -6,6 +6,7 @@
 #include "room.h"
 #include "game.h"
 #include "image.h"
+#include "chat.h"
 
 void handle_request(int client_socket, const char *method, const char *path, cJSON *json_request) {
 
@@ -67,6 +68,10 @@ void handle_request(int client_socket, const char *method, const char *path, cJS
     else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/forfeit") == 0) {
         forfeit_game_handler(client_socket, json_request);
     }
+    else if (strcmp(method, "POST") == 0 && strcmp(path, "/chat/send_message") == 0){
+        send_message_handler(client_socket, json_request);
+    }
+
 
     else {
         // 지원하지 않는 요청에 대한 404 응답
