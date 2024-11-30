@@ -6,6 +6,7 @@
 #include "game.h"
 #include "config.h"
 #include "cJSON.h"
+#include "utils.h"
 
 void print_board() {
     printf("Current Chessboard:\n");
@@ -145,10 +146,11 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
     const cJSON *room_id_json = cJSON_GetObjectItemCaseSensitive(json_request, "room_id");
     const cJSON *from_position_json = cJSON_GetObjectItemCaseSensitive(json_request, "from_position");
     const cJSON *to_position_json = cJSON_GetObjectItemCaseSensitive(json_request, "to_position");
-    const cJSON *player_id_json = cJSON_GetObjectItemCaseSensitive(json_request, "player_id");
+    const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
 
     // JSON 유효성 검사
-    if (!cJSON_IsNumber(room_id_json) || !cJSON_IsString(from_position_json) || !cJSON_IsString(to_position_json) || !cJSON_IsNumber(player_id_json)) {
+    if (!cJSON_IsNumber(room_id_json) || !cJSON_IsString(from_position_json) ||
+        !cJSON_IsString(to_position_json) || !cJSON_IsString(token_json)) {
         const char *error_response =
                 "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Invalid input\"}";
         write(client_socket, error_response, strlen(error_response));
@@ -156,7 +158,16 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
     }
 
     int room_id = room_id_json->valueint;
-    int player_id = player_id_json->valueint;
+    const char *token = token_json->valuestring;
+
+    // 토큰으로 user_id 가져오기
+    int player_id = get_user_id_by_token(token);
+    if (player_id == -1) {
+        const char *error_response =
+                "HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Invalid token\"}";
+        write(client_socket, error_response, strlen(error_response));
+        return;
+    }
 
     // 게임 상태 가져오기
     GameState *game_state = get_game_state(room_id);
@@ -166,6 +177,29 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
         write(client_socket, error_response, strlen(error_response));
         return;
     }
+
+    // **토큰 유효성 확인**
+    if (strcmp(game_state->player1_token, token) != 0 && strcmp(game_state->player2_token, token) != 0) {
+        const char *error_response =
+                "HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Invalid token\"}";
+        write(client_socket, error_response, strlen(error_response));
+        return;
+    }
+
+    if (strcmp(game_state->current_player_token, token) != 0) {
+        printf("Error: It is not the turn for token '%s'. Current turn token is '%s'\n",
+               token, game_state->current_player_token);
+
+        const char *error_response =
+                "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Not your turn\"}";
+        write(client_socket, error_response, strlen(error_response));
+        return;
+    }
+
+    printf("Debug: Player 1 Token: %s\n", game_state->player1_token);
+    printf("Debug: Player 2 Token: %s\n", game_state->player2_token);
+    printf("Debug: Current Player Token: %s\n", game_state->current_player_token);
+    printf("Debug: Provided Token: %s\n", token);
 
     // 게임 종료 여부 확인
     if (game_state->game_over) {
@@ -199,9 +233,11 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
-    // 현재 플레이어 확인
-    if (game_state->current_player != player_id) {
-        printf("Error: It is not player %d's turn\n", player_id);
+    // 현재 플레이어 토큰 확인
+    if (strcmp(game_state->current_player_token, token) != 0) {
+        printf("Error: It is not the turn for token '%s'. Current turn token is '%s'\n",
+               token, game_state->current_player_token);
+
         const char *error_response =
                 "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Not your turn\"}";
         write(client_socket, error_response, strlen(error_response));
@@ -232,8 +268,12 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
-    // 턴 변경
-    game_state->current_player = (game_state->current_player == 1) ? 2 : 1;
+    // 턴 변경: 현재 플레이어 토큰 전환
+    if (strcmp(game_state->current_player_token, game_state->player1_token) == 0) {
+        strncpy(game_state->current_player_token, game_state->player2_token, TOKEN_LENGTH);
+    } else {
+        strncpy(game_state->current_player_token, game_state->player1_token, TOKEN_LENGTH);
+    }
 
     // 성공 응답 반환
     char success_response[512];

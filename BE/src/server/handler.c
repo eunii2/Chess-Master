@@ -55,16 +55,16 @@ void handle_request(int client_socket, const char *method, const char *path, cJS
         image_upload_handler(client_socket, json_request);
     }
     //게임 API 핸들러
-    else if (strcmp(method, "POST") == 0 && strcmp(path, "/api/start_game") == 0) {
+    else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/start_game") == 0) {
         start_game_handler(client_socket, json_request);
     }
-    else if (strcmp(method, "POST") == 0 && strcmp(path, "/api/get_game_status") == 0) {
+    else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/get_game_status") == 0) {
         get_game_status_handler(client_socket, json_request);
     }
-    else if (strcmp(method, "POST") == 0 && strcmp(path, "/api/move_piece") == 0) {
+    else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/move_piece") == 0) {
         move_piece_handler(client_socket, json_request);
     }
-    else if (strcmp(method, "POST") == 0 && strcmp(path, "/api/forfeit") == 0) {
+    else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/forfeit") == 0) {
         forfeit_game_handler(client_socket, json_request);
     }
 

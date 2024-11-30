@@ -5,6 +5,8 @@
 #include "cJSON.h"
 #include <stdbool.h>
 
+#define TOKEN_LENGTH 64 // 토큰 길이 정의
+
 // GameState 구조체 정의
 typedef struct {
     int room_id;               // 방 ID
@@ -12,6 +14,9 @@ typedef struct {
     int current_player;        // 현재 턴 플레이어
     int remaining_time;        // 남은 시간 (초)
     int game_over;             // 게임 종료 여부
+    char player1_token[TOKEN_LENGTH + 1];
+    char player2_token[TOKEN_LENGTH + 1];
+    char current_player_token[TOKEN_LENGTH + 1]; // 현재 턴인 플레이어의 토큰
 } GameState;
 
 // 체스판 관련 전역 변수

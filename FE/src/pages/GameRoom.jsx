@@ -79,7 +79,7 @@ const GameRoom = () => {
     try {
       const token = localStorage.getItem('userToken');
       await gameService.startGame(roomId, token);
-      navigate(`/games/${roomId}/play`);
+      navigate(`/game-start/${roomId}`); 
     } catch (err) {
       setError('게임 시작에 실패했습니다.');
     }
@@ -89,7 +89,7 @@ const GameRoom = () => {
     try {
       const token = localStorage.getItem('userToken');
       await gameService.leaveRoom(roomId, token);
-      navigate('/games');
+      navigate('/game-list');
     } catch (err) {
       setError('방을 나가는데 실패했습니다.');
     }
