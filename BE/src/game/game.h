@@ -4,8 +4,7 @@
 #include <pthread.h>
 #include "cJSON.h"
 #include <stdbool.h>
-
-#define TOKEN_LENGTH 64 // 토큰 길이 정의
+#include "../config/config.h"
 
 // GameState 구조체 정의
 typedef struct {
@@ -35,10 +34,10 @@ void forfeit_game_handler(int client_socket, cJSON *json_request);
 void get_game_status_handler(int client_socket, cJSON *json_request);
 void move_piece_handler(int client_socket, cJSON *json_request);
 
-bool is_valid_rook_move(int from_row, int from_col, int to_row, int to_col);
-bool is_valid_bishop_move(int from_row, int from_col, int to_row, int to_col);
+bool is_valid_rook_move(int from_row, int from_col, int to_row, int to_col, char chessboard[8][8]);
+bool is_valid_bishop_move(int from_row, int from_col, int to_row, int to_col, char piece, char chessboard[8][8]);
 bool is_valid_knight_move(int from_row, int from_col, int to_row, int to_col);
-bool is_valid_queen_move(int from_row, int from_col, int to_row, int to_col);
+bool is_valid_queen_move(int from_row, int from_col, int to_row, int to_col, char piece, char chessboard[8][8]);
 bool is_valid_pawn_move(int from_row, int from_col, int to_row, int to_col, char piece, char chessboard[8][8]);
 bool is_valid_king_move(int from_row, int from_col, int to_row, int to_col);
 
