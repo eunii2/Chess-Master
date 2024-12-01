@@ -47,4 +47,6 @@ bool is_valid_queen_move(int from_row, int from_col, int to_row, int to_col, cha
 bool is_valid_pawn_move(int from_row, int from_col, int to_row, int to_col, char piece, char chessboard[8][8]);
 bool is_valid_king_move(int from_row, int from_col, int to_row, int to_col);
 
+void get_game_history_handler(int client_socket, cJSON *json_request);
+
 #endif
