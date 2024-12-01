@@ -27,6 +27,7 @@ import {
   HomeButton,
   RecordButton
 } from '../styles/GamePage.styles';
+import GameHistory from './GameHistory';
 
 const GamePage = () => {
   const { roomId } = useParams();
@@ -297,6 +298,10 @@ const GamePage = () => {
             </ButtonContainer>
           </GameOverModal>
         </GameOverlay>
+      )}
+      
+      {gameStatus?.game_over && (
+        <GameHistory roomId={roomId} />
       )}
     </GameContainer>
   );

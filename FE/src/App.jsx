@@ -5,6 +5,7 @@ import GameListPage from './pages/GameListPage';
 import GameRoom from './pages/GameRoom';
 import { createGlobalStyle } from 'styled-components';
 import GamePage from './pages/GamePage';
+import GameHistory from './pages/GameHistory';
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -44,6 +45,7 @@ function App() {
           <Route path="/games" element={<GameListPage />} />
           <Route path="/games/:roomId" element={<GameRoom />} />
           <Route path="/game/:roomId" element={<GamePage />} />
+          <Route path="/games/:roomId/record" element={<GameHistory />} />
         </Routes>
       </Router>
     </>

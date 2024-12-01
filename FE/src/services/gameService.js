@@ -250,6 +250,22 @@ getMessages: async (roomId, token) => {
       console.error('Get messages error:', error.response?.data || error);
       throw error;
     }
+  },
+
+  async getGameHistory(roomId) {
+    try {
+        const response = await axios.post(
+            `${API_URL}/game/get_history`,
+            {
+                room_id: parseInt(roomId, 10)
+            },
+            axiosConfig
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Get Game History Error:', error.response?.data || error);
+        throw error;
+    }
   }
 };
 
