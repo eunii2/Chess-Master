@@ -2,6 +2,15 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8080';
 
+// 공통 axios 설정
+const axiosConfig = {
+  headers: {
+      'Content-Type': 'application/json'
+  },
+  withCredentials: false  // CORS 설정
+};
+
+
 export const gameService = {
   async getRoomList(token) {
     console.log("Sending token:", token);
@@ -65,22 +74,22 @@ export const gameService = {
     }
   },
 
-  async startGame(roomId, token) {
-    try {
-      const response = await axios({
-        method: 'POST',
-        url: `${API_URL}/room/${roomId}/start`,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        data: { token }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Start Game Error:', error);
-      throw error;
-    }
-  },
+  // async startGame(roomId, token) {
+  //   try {
+  //     const response = await axios({
+  //       method: 'POST',
+  //       url: `${API_URL}/room/${roomId}/start`,
+  //       headers: {
+  //         'Content-Type': 'application/json'
+  //       },
+  //       data: { token }
+  //     });
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error('Start Game Error:', error);
+  //     throw error;
+  //   }
+  // },
 
   async createRoom(token, roomName) {
     try {
@@ -118,6 +127,119 @@ export const gameService = {
       return response.data;
     } catch (error) {
       console.error('Leave Room Error:', error);
+      throw error;
+    }
+  },
+
+  async startGame(roomId, token) {
+    try {
+        const response = await axios.post(
+            `${API_URL}/game/start_game`,
+            {
+                room_id: Number(roomId),
+                token
+            },
+            axiosConfig
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Start Game Error:', error);
+        throw error;
+    }
+},
+
+async getGameStatus(roomId, token) {
+    try {
+        const response = await axios.post(
+            `${API_URL}/game/get_game_status`,
+            {
+                room_id: parseInt(roomId, 10),
+                token: token
+            },
+            axiosConfig
+        );
+        console.log('Raw game status response:', response.data.board);
+        console.log('Game status response:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Get Game Status Error:', error.response?.data || error);
+        throw error;
+    }
+},
+
+async movePiece(roomId, token, fromPosition, toPosition) {
+    try {
+        const response = await axios.post(
+            `${API_URL}/game/move_piece`,
+            {
+                room_id: parseInt(roomId, 10),
+                token,
+                from_position: fromPosition,
+                to_position: toPosition
+            },
+            axiosConfig
+        );
+        return response.data;
+    } catch (error) {
+        if (error.response?.data?.message) {
+            throw new Error(error.response.data.message);
+        }
+        console.error('Move Piece Error:', error);
+        throw error;
+    }
+},
+
+async forfeitGame(roomId, token) {
+    try {
+        const response = await axios.post(
+            `${API_URL}/game/forfeit`,
+            {
+                room_id: parseInt(roomId, 10),
+                token
+            },
+            axiosConfig
+        );
+        return response.data;
+    } catch (error) {
+        if (error.response?.data?.message) {
+            throw new Error(error.response.data.message);
+        }
+        console.error('Forfeit Game Error:', error);
+        throw error;
+    }
+},
+
+async sendMessage(roomId, token, message) {
+    try {
+        const response = await axios.post(`${API_URL}/chat/send_message`, {
+            room_id: parseInt(roomId),
+            token: token,
+            message: message
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Send message error:', error.response?.data || error);
+        throw error;
+    }
+},
+
+getMessages: async (roomId, token) => {
+    try {
+      console.log('Requesting messages with:', {
+        room_id: roomId,
+        token: token
+      });
+
+      const response = await axios.post(`${API_URL}/chat/get_messages`, {
+        room_id: parseInt(roomId),
+        token: token
+      });
+      
+      console.log('Messages response:', response.data);
+      
+      return response.data.messages;
+    } catch (error) {
+      console.error('Get messages error:', error.response?.data || error);
       throw error;
     }
   }

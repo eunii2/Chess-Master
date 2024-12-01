@@ -24,7 +24,7 @@ const GameRoom = () => {
   const [error, setError] = useState(null);
   const [roomName, setRoomName] = useState('');
   const [isCreator, setIsCreator] = useState(false);
-
+  const [gameStarted, setGameStarted] = useState(false); // 게임 시작 상태 추가
   useEffect(() => {
     const token = localStorage.getItem('userToken');
     if (!token) {
@@ -64,12 +64,18 @@ const GameRoom = () => {
             }
           ]);
         }
+
+        // 게임 시작 상태 확인
+        if (response.game_started) {
+          setGameStarted(true);
+          navigate(`/game/${roomId}`); // 게임 화면으로 이동
+        }
       } catch (err) {
         console.error('Room Status Error:', err);
         setError('방 정보를 불러오는데 실패했습니다.');
       }
     };
-
+    
     fetchRoomStatus();
     const interval = setInterval(fetchRoomStatus, 3000);
     return () => clearInterval(interval);
@@ -79,7 +85,7 @@ const GameRoom = () => {
     try {
       const token = localStorage.getItem('userToken');
       await gameService.startGame(roomId, token);
-      navigate(`/game-start/${roomId}`); 
+      navigate(`/game/${roomId}`); 
     } catch (err) {
       setError('게임 시작에 실패했습니다.');
     }
