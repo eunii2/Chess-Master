@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { gameService } from '../services/gameService';
 import Chessboard from '../components/Chessboard';
 import {
@@ -17,7 +17,15 @@ import {
   PlayerInfo,
   MessageContainer,
   Username,
-  MessageBubble
+  MessageBubble,
+  GameOverlay,
+  GameOverModal,
+  GameOverTitle,
+  GameOverMessage,
+  ButtonContainer,
+  Button,
+  HomeButton,
+  RecordButton
 } from '../styles/GamePage.styles';
 
 const GamePage = () => {
@@ -31,6 +39,8 @@ const GamePage = () => {
   const messagesEndRef = useRef(null);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
   const chatContainerRef = useRef(null);
+  const navigate = useNavigate();
+  const [gameResult, setGameResult] = useState(null);
 
   const handleScroll = (e) => {
     const element = e.target;
@@ -70,9 +80,6 @@ const GamePage = () => {
         const status = await gameService.getGameStatus(roomId, currentUserToken);
         setGameStatus(status);
         
-        if (status.game_over) {
-          alert('게임이 종료되었습니다!');
-        }
       } catch (error) {
         console.error('Failed to fetch game status:', error);
       }
@@ -91,21 +98,28 @@ const GamePage = () => {
   // 기물 이동
   const handleSquareClick = async (fromPosition, toPosition) => {
     try {
-      console.log('Moving piece from', fromPosition, 'to', toPosition);  // 디버깅 로그
+      console.log('Moving piece from', fromPosition, 'to', toPosition);
       
-      await gameService.movePiece(
+      // 이동 결과를 받아옴
+      const moveResult = await gameService.movePiece(
         roomId,
         currentUserToken,
         fromPosition,
         toPosition
       );
       
-      // 이동 후 게임 상태 업데이트
+      // 새로운 게임 상태를 가져옴
       const newStatus = await gameService.getGameStatus(roomId, currentUserToken);
       setGameStatus(newStatus);
+      
     } catch (error) {
-      console.error('Move failed:', error);
-      alert(error.response?.data?.message || '이동할 수 없습니다.');
+      if (error.response) {
+        if (!error.response.data?.game_over) {
+          alert(error.response.data?.message || '이동할 수 없습니다.');
+        }
+      } else {
+        console.error('Move failed:', error);
+      }
     }
   };
 
@@ -163,6 +177,36 @@ const GamePage = () => {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  useEffect(() => {
+    if (gameStatus?.game_over) {
+      console.log('Game Status:', gameStatus); // 디버깅을 위한 로그 추가
+      
+      // 현재 플레이어가 승자인지 확인
+      const amIWinner = gameStatus.winner_token === currentUserToken;
+      
+      setGameResult({
+        isWin: amIWinner,
+        reason: gameStatus.game_over_reason,
+        winner: gameStatus.winner_username
+      });
+    }
+  }, [gameStatus, currentUserToken]);
+
+  const getGameOverMessage = () => {
+    console.log('Game Result:', gameResult); // 디버깅을 위한 로그 추가
+    
+    if (gameResult.reason === 'king_captured') {
+      return gameResult.isWin ? 
+        "상대방의 왕을 잡았습니다" : 
+        "당신의 왕이 잡혔습니다";
+    } else if (gameResult.reason === 'forfeit') {
+      return gameResult.isWin ? 
+        "상대방이 기권했습니다" : 
+        "당신이 기권했습니다";
+    }
+    return "게임이 종료되었습니다"; // 기본 메시지
   };
 
   return (
@@ -233,6 +277,27 @@ const GamePage = () => {
           </ChatInput>
         </ChatContainer>
       </SideContainer>
+      
+      {gameResult && (
+        <GameOverlay>
+          <GameOverModal>
+            <GameOverTitle $isWin={gameResult.isWin}>
+              {gameResult.isWin ? 'You win!' : 'You lose'}
+            </GameOverTitle>
+            <GameOverMessage>
+              {getGameOverMessage()}
+            </GameOverMessage>
+            <ButtonContainer>
+              <RecordButton onClick={() => navigate(`/games/${roomId}/record`)}>
+                기록 보기
+              </RecordButton>
+              <HomeButton onClick={() => navigate('/games')}>
+                홈으로
+              </HomeButton>
+            </ButtonContainer>
+          </GameOverModal>
+        </GameOverlay>
+      )}
     </GameContainer>
   );
 };

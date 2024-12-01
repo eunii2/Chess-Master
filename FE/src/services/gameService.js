@@ -169,6 +169,14 @@ async getGameStatus(roomId, token) {
 
 async movePiece(roomId, token, fromPosition, toPosition) {
     try {
+        // 먼저 게임 상태를 확인
+        const gameStatus = await this.getGameStatus(roomId, token);
+        
+        // 게임이 이미 종료된 상태라면 바로 종료
+        if (gameStatus.game_over) {
+            return gameStatus;
+        }
+
         const response = await axios.post(
             `${API_URL}/game/move_piece`,
             {
