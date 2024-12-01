@@ -4,7 +4,6 @@ import LoginPage from './pages/LoginPage';
 import GameListPage from './pages/GameListPage';
 import GameRoom from './pages/GameRoom';
 import { createGlobalStyle } from 'styled-components';
-import GameStart from './pages/GameStart'; 
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -43,7 +42,6 @@ function App() {
           <Route path="/" element={<LoginPage />} />
           <Route path="/games" element={<GameListPage />} />
           <Route path="/games/:roomId" element={<GameRoom />} />
-          <Route path="/game-start" element={<GameStart />} /> 
         </Routes>
       </Router>
     </>
