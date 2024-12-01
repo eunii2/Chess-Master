@@ -48,6 +48,7 @@ add_executable(chess_server
         src/game/get_game_status.c
         src/chat/chat.h
         src/chat/send_message.c
+        src/chat/get_message.c
 )
 
 # 라이브러리 링크

@@ -13,9 +13,12 @@ typedef struct {
     int current_player;        // 현재 턴 플레이어
     int remaining_time;        // 남은 시간 (초)
     int game_over;             // 게임 종료 여부
+    char player1_username[50];
+    char player2_username[50];
     char player1_token[TOKEN_LENGTH + 1];
     char player2_token[TOKEN_LENGTH + 1];
     char current_player_token[TOKEN_LENGTH + 1]; // 현재 턴인 플레이어의 토큰
+    int game_started;
 } GameState;
 
 // 체스판 관련 전역 변수

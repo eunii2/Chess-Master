@@ -12,5 +12,6 @@ void create_directory(const char *path);
 int get_user_id_by_token(const char* token);
 char* get_user_name_by_token(const char* token);
 
+void send_cors_response(int client_socket, const char *status_code, const char *content_type, const char *body);
 
 #endif //CHESS_SERVER_UTILS_H

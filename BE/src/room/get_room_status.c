@@ -1,7 +1,7 @@
 #include "room.h"
 #include "utils.h"
 #include "config.h"
-
+#include "game.h"
 
 void get_room_status_handler(int client_socket, cJSON *json_request) {
     const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
@@ -21,6 +21,8 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
 
     const char *token = token_json->valuestring;
     int room_id = room_id_json->valueint;
+    GameState *game_state = get_game_state(room_id);
+    int game_started = (game_state != NULL && game_state->game_started);
 
     int user_id = get_user_id_by_token(token);
     if (user_id == -1) {
@@ -35,6 +37,22 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 게임이 시작된 경우
+    if (game_started) {
+        int is_creator = (strcmp(game_state->player1_token, token) == 0);
+        char success_response[512];
+        snprintf(success_response, sizeof(success_response),
+                 "HTTP/1.1 200 OK\r\n"
+                 "Content-Type: application/json\r\n"
+                 "%s\r\n"
+                 "{\"status\":\"success\",\"game_started\":true,\"is_creator\":%s}",
+                 cors_headers,
+                 is_creator ? "true" : "false");
+        write(client_socket, success_response, strlen(success_response));
+        return;
+    }
+
+    // 게임이 시작되지 않은 경우 room_list.txt 확인
     FILE *file = fopen(ROOM_LIST_FILE, "r");
     if (!file) {
         perror("fopen error");
@@ -87,7 +105,10 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
              "HTTP/1.1 200 OK\r\n"
              "Content-Type: application/json\r\n"
              "%s\r\n"
-             "{\"status\":\"success\",\"room_name\":\"%s\",\"is_creator\":%s,\"has_joined_members\":%s}",
-             cors_headers, room_name, is_creator ? "true" : "false", has_joined_members ? "true" : "false");
+             "{\"status\":\"success\",\"room_name\":\"%s\",\"is_creator\":%s,\"has_joined_members\":%s,\"game_started\":%s}",
+             cors_headers, room_name,
+             is_creator ? "true" : "false",
+             has_joined_members ? "true" : "false",
+             game_started ? "true" : "false");  // 게임 시작 상태 추가
     write(client_socket, success_response, strlen(success_response));
 }

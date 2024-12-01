@@ -5,16 +5,7 @@
 #include "cJSON.h"
 #include "config.h"
 #include "game.h"
-
-/*// 게임 상태 구조체 정의
-typedef struct {
-    int room_id;               // 방 ID
-    char board[8][8];          // 체스판 상태
-    char player1_token[TOKEN_LENGTH + 1];  // 플레이어 1 토큰
-    char player2_token[TOKEN_LENGTH + 1];  // 플레이어 2 토큰
-    char current_player_token[TOKEN_LENGTH + 1]; // 현재 턴 플레이어 토큰
-    int game_over;             // 게임 종료 여부 (0: 진행 중, 1: 종료)
-} GameState;*/
+#include "utils.h"
 
 // 게임 상태 배열 및 초기화 플래그
 static GameState game_states[10];
@@ -67,9 +58,14 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     const cJSON *room_id_json = cJSON_GetObjectItemCaseSensitive(json_request, "room_id");
 
     if (!cJSON_IsNumber(room_id_json)) {
-        const char *error_response =
-                "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\n\r\nInvalid room_id";
-        write(client_socket, error_response, strlen(error_response));
+        const char *response =
+                "HTTP/1.1 400 Bad Request\r\n"
+                "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+                "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+                "Access-Control-Allow-Headers: Content-Type\r\n"
+                "Content-Type: application/json\r\n\r\n"
+                "{\"status\":\"error\",\"message\":\"Invalid room_id\"}";
+        write(client_socket, response, strlen(response));
         return;
     }
 
@@ -77,17 +73,40 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     GameState* game_state = get_game_state(room_id);
 
     if (!game_state) {
-        const char *error_response =
-                "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\nRoom not found";
-        write(client_socket, error_response, strlen(error_response));
+        const char *response =
+                "HTTP/1.1 404 Not Found\r\n"
+                "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+                "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+                "Access-Control-Allow-Headers: Content-Type\r\n"
+                "Content-Type: application/json\r\n\r\n"
+                "{\"status\":\"error\",\"message\":\"Room not found\"}";
+        write(client_socket, response, strlen(response));
         return;
     }
+
+    // 토큰으로 사용자 이름 조회
+    char* player1_username = get_user_name_by_token(game_state->player1_token);
+    char* player2_username = get_user_name_by_token(game_state->player2_token);
+
+    // 디버깅을 위한 로그 출력
+    printf("Player 1 Token: %s\n", game_state->player1_token);
+    printf("Player 2 Token: %s\n", game_state->player2_token);
+    printf("Player 1 Username: %s\n", player1_username);
+    printf("Player 2 Username: %s\n", player2_username);
 
     // JSON 응답 생성
     cJSON *response_json = cJSON_CreateObject();
     cJSON_AddStringToObject(response_json, "status", "success");
     cJSON_AddNumberToObject(response_json, "room_id", game_state->room_id);
     cJSON_AddStringToObject(response_json, "current_player_token", game_state->current_player_token);
+    cJSON_AddStringToObject(response_json, "player1_token", game_state->player1_token);
+    cJSON_AddStringToObject(response_json, "player2_token", game_state->player2_token);
+    cJSON_AddStringToObject(response_json, "player1_username",
+                            player1_username ? player1_username : "Player 1");
+    cJSON_AddStringToObject(response_json, "player2_username",
+                            player2_username ? player2_username : "Player 2");
+    cJSON_AddStringToObject(response_json, "player1_username", player1_username);
+    cJSON_AddStringToObject(response_json, "player2_username", player2_username);
     cJSON_AddBoolToObject(response_json, "game_over", game_state->game_over);
 
     // 체스판 상태를 JSON 배열로 추가
@@ -101,15 +120,19 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     cJSON_AddItemToObject(response_json, "board", board_array);
 
     // JSON 응답 전송
-    char *response_string = cJSON_Print(response_json);
-    char response[1024];
+    char *json_str = cJSON_Print(response_json);
+    char response[4096];
     snprintf(response, sizeof(response),
-             "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n%s",
-             response_string);
+             "HTTP/1.1 200 OK\r\n"
+             "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+             "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+             "Access-Control-Allow-Headers: Content-Type\r\n"
+             "Content-Type: application/json\r\n\r\n"
+             "%s", json_str);
 
     write(client_socket, response, strlen(response));
 
     // 메모리 해제
+    free(json_str);
     cJSON_Delete(response_json);
-    free(response_string);
 }
