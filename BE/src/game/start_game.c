@@ -48,39 +48,82 @@ void setup_initial_board(char board[8][8]) {
 
 void start_game_handler(int client_socket, cJSON *json_request) {
     const cJSON *room_id_json = cJSON_GetObjectItemCaseSensitive(json_request, "room_id");
+    const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
 
-    if (!cJSON_IsNumber(room_id_json)) {
-        const char *error_response =
-                "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\n\r\nInvalid room_id";
-        write(client_socket, error_response, strlen(error_response));
+    // 디버그 로그 추가
+    printf("Received start game request - room_id: %s, token: %s\n",
+           cJSON_Print(room_id_json),
+           cJSON_GetStringValue(token_json));
+
+    if (!cJSON_IsNumber(room_id_json) || !cJSON_IsString(token_json)) {
+        const char *response =
+                "HTTP/1.1 400 Bad Request\r\n"
+                "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+                "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+                "Access-Control-Allow-Headers: Content-Type\r\n"
+                "Content-Type: application/json\r\n\r\n"
+                "{\"status\":\"error\",\"message\":\"Invalid input\"}";
+        write(client_socket, response, strlen(response));
         return;
     }
 
     int room_id = room_id_json->valueint;
+    const char *token = token_json->valuestring;
 
     // 게임 상태 업데이트
     GameState *game_state = get_game_state(room_id);
+
+    // 게임 상태 디버그 로그
+    if (game_state) {
+        printf("Game state found - player1_token: %s, player2_token: %s\n",
+               game_state->player1_token,
+               game_state->player2_token);
+    } else {
+        printf("Game state not found for room_id: %d\n", room_id);
+    }
+
     if (!game_state) {
-        const char *error_response =
-                "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\nRoom not found";
-        write(client_socket, error_response, strlen(error_response));
+        const char *response =
+                "HTTP/1.1 404 Not Found\r\n"
+                "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+                "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+                "Access-Control-Allow-Headers: Content-Type\r\n"
+                "Content-Type: application/json\r\n\r\n"
+                "{\"status\":\"error\",\"message\":\"Room not found\"}";
+        write(client_socket, response, strlen(response));
         return;
     }
 
-    // **방장 토큰 확인 추가**
-    if (strlen(game_state->player1_token) == 0) {
-        const char *error_response =
-                "HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\n\r\nHost token not set";
-        write(client_socket, error_response, strlen(error_response));
+    // 토큰이 방장의 토큰인지 확인
+    if (strcmp(game_state->player1_token, token) != 0) {
+        const char *response =
+                "HTTP/1.1 403 Forbidden\r\n"
+                "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+                "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+                "Access-Control-Allow-Headers: Content-Type\r\n"
+                "Content-Type: application/json\r\n\r\n"
+                "{\"status\":\"error\",\"message\":\"Only room creator can start the game\"}";
+        write(client_socket, response, strlen(response));
         return;
     }
+
+    // 게임 시작 상태 업데이트
+    game_state->game_started = 1;  // 게임 시작 상태 설정
+
+    // 참가자에게 게임 시작 알림 전송
+    const char *response = "{\"status\":\"success\",\"message\":\"Game started\"}";
+    write(client_socket, response, strlen(response));
 
     // **두 명의 플레이어가 참가했는지 확인**
     if (strlen(game_state->player1_token) == 0 || strlen(game_state->player2_token) == 0) {
-        const char *error_response =
-                "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n"
-                "{\"status\":\"error\",\"message\":\"Not enough players to start the game\"}";
-        write(client_socket, error_response, strlen(error_response));
+        const char *response =
+                "HTTP/1.1 400 Bad Request\r\n"
+                "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+                "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+                "Access-Control-Allow-Headers: Content-Type\r\n"
+                "Content-Type: application/json\r\n\r\n"
+                "{\"status\":\"error\",\"message\":\"Waiting for players to join\"}";
+        write(client_socket, response, strlen(response));
         return;
     }
 
@@ -111,10 +154,14 @@ void start_game_handler(int client_socket, cJSON *json_request) {
     // Room List에서 방 제거 로직 추가
     FILE *file = fopen(ROOM_LIST_FILE, "r");
     if (!file) {
-        perror("fopen error");
-        const char *error_response =
-                "HTTP/1.1 500 Internal Server Error\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Failed to update room list\"}";
-        write(client_socket, error_response, strlen(error_response));
+        const char *response =
+                "HTTP/1.1 500 Internal Server Error\r\n"
+                "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+                "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+                "Access-Control-Allow-Headers: Content-Type\r\n"
+                "Content-Type: application/json\r\n\r\n"
+                "{\"status\":\"error\",\"message\":\"Failed to update room list\"}";
+        write(client_socket, response, strlen(response));
         return;
     }
 
@@ -151,11 +198,14 @@ void start_game_handler(int client_socket, cJSON *json_request) {
     }
 
     // 성공 응답 반환
-    char response[512];
-    snprintf(response, sizeof(response),
+    char success_response[512];
+    snprintf(success_response, sizeof(success_response),
              "HTTP/1.1 200 OK\r\n"
+             "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+             "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+             "Access-Control-Allow-Headers: Content-Type\r\n"
              "Content-Type: application/json\r\n\r\n"
              "{\"status\":\"success\",\"message\":\"Game started\",\"room_id\":%d}",
              room_id);
-    write(client_socket, response, strlen(response));
+    write(client_socket, success_response, strlen(success_response));
 }

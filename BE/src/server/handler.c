@@ -14,14 +14,14 @@ void handle_request(int client_socket, const char *method, const char *path, cJS
     if (strcmp(method, "OPTIONS") == 0) {
         const char *cors_response =
                 "HTTP/1.1 204 No Content\r\n"
-                "Access-Control-Allow-Origin: *\r\n"
+                "Access-Control-Allow-Origin: http://localhost:5173\r\n"
                 "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
                 "Access-Control-Allow-Headers: Content-Type\r\n"
+                "Access-Control-Max-Age: 3600\r\n"
                 "\r\n";
         write(client_socket, cors_response, strlen(cors_response));
         return;
     }
-
 
     if (strcmp(method, "POST") == 0 && strcmp(path, "/join") == 0) {
         // 회원가입 처리
@@ -68,10 +68,12 @@ void handle_request(int client_socket, const char *method, const char *path, cJS
     else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/forfeit") == 0) {
         forfeit_game_handler(client_socket, json_request);
     }
-    else if (strcmp(method, "POST") == 0 && strcmp(path, "/chat/send_message") == 0){
+    else if (strcmp(method, "POST") == 0 && strcmp(path, "/chat/send_message") == 0) {
         send_message_handler(client_socket, json_request);
     }
-
+    else if (strcmp(method, "POST") == 0 && strcmp(path, "/chat/get_messages") == 0) {
+        get_messages_handler(client_socket, json_request);
+    }
 
     else {
         // 지원하지 않는 요청에 대한 404 응답

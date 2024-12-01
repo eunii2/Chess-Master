@@ -94,8 +94,16 @@ char* get_user_name_by_token(const char* token) {
     }
 
     char buffer[512];
-    static char user_name[100];
-    memset(user_name, 0, sizeof(user_name));
+    // 각 호출마다 새로운 정적 배열 사용
+    static char user_name1[100];
+    static char user_name2[100];
+    static int call_count = 0;
+
+    // 현재 사용할 버퍼 선택
+    char* current_user_name = (call_count % 2 == 0) ? user_name1 : user_name2;
+    call_count++;
+
+    memset(current_user_name, 0, 100);
 
     while (fgets(buffer, sizeof(buffer), file)) {
         char *token_pos = strstr(buffer, "Token: ");
@@ -106,9 +114,9 @@ char* get_user_name_by_token(const char* token) {
             if (strcmp(current_token, token) == 0) {
                 char *name_pos = strstr(buffer, "Username: ");
                 if (name_pos) {
-                    sscanf(name_pos + strlen("Username: "), "%[^,]", user_name);
+                    sscanf(name_pos + strlen("Username: "), "%[^,]", current_user_name);
                     fclose(file);
-                    return user_name;
+                    return current_user_name;
                 }
             }
         }
@@ -140,4 +148,23 @@ void initialize_data_directories() {
     create_directory("../data/rooms");
     create_directory("../data/game");
     create_directory("../data/chat");
+}
+
+void send_cors_response(int client_socket, const char *status_code, const char *content_type, const char *body) {
+    char response[4096];
+    snprintf(response, sizeof(response),
+             "HTTP/1.1 %s\r\n"
+             "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+             "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+             "Access-Control-Allow-Headers: Content-Type\r\n"
+             "Content-Type: %s\r\n"
+             "Content-Length: %zu\r\n"
+             "\r\n"
+             "%s",
+             status_code,
+             content_type,
+             strlen(body),
+             body
+    );
+    write(client_socket, response, strlen(response));
 }

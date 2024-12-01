@@ -2,5 +2,6 @@
 #define SERVER_PROJECT_CHAT_H
 
 void send_message_handler(int client_socket, cJSON *json_request);
+void get_messages_handler(int client_socket, cJSON *json_request);
 
 #endif //SERVER_PROJECT_CHAT_H

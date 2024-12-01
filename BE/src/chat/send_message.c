@@ -16,9 +16,14 @@ void send_message_handler(int client_socket, cJSON *json_request) {
 
     // JSON 유효성 검사
     if (!cJSON_IsNumber(room_id_json) || !cJSON_IsString(token_json) || !cJSON_IsString(message_json)) {
-        const char *error_response =
-                "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Invalid input\"}";
-        write(client_socket, error_response, strlen(error_response));
+        const char *response =
+                "HTTP/1.1 400 Bad Request\r\n"
+                "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+                "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+                "Access-Control-Allow-Headers: Content-Type\r\n"
+                "Content-Type: application/json\r\n\r\n"
+                "{\"status\":\"error\",\"message\":\"Invalid input\"}";
+        write(client_socket, response, strlen(response));
         return;
     }
 
@@ -29,9 +34,14 @@ void send_message_handler(int client_socket, cJSON *json_request) {
     // 게임 상태 확인
     GameState *game_state = get_game_state(room_id);
     if (!game_state) {
-        const char *error_response =
-                "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Room not found\"}";
-        write(client_socket, error_response, strlen(error_response));
+        const char *response =
+                "HTTP/1.1 404 Not Found\r\n"
+                "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+                "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+                "Access-Control-Allow-Headers: Content-Type\r\n"
+                "Content-Type: application/json\r\n\r\n"
+                "{\"status\":\"error\",\"message\":\"Room not found\"}";
+        write(client_socket, response, strlen(response));
         return;
     }
 
@@ -72,7 +82,12 @@ void send_message_handler(int client_socket, cJSON *json_request) {
 
     // 성공 응답 반환
     const char *success_response =
-            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\":\"success\",\"message\":\"Message sent\"}";
+            "HTTP/1.1 200 OK\r\n"
+            "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+            "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+            "Access-Control-Allow-Headers: Content-Type\r\n"
+            "Content-Type: application/json\r\n\r\n"
+            "{\"status\":\"success\",\"message\":\"Message sent\"}";
     write(client_socket, success_response, strlen(success_response));
 
     // 서버 로그 출력
