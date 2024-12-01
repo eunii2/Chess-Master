@@ -67,22 +67,16 @@ void forfeit_game_handler(int client_socket, cJSON *json_request) {
 
     // 게임 종료 상태 설정
     game_state->game_over = 1;
+    strncpy(game_state->forfeit_token, token, TOKEN_LENGTH);
 
     // 상대방의 승리자 확인
     char *winner = NULL;
     if (strcmp(game_state->player1_token, token) == 0) {
         winner = get_user_name_by_token(game_state->player2_token);
-    } else if (strcmp(game_state->player2_token, token) == 0) {
+        strncpy(game_state->winner_token, game_state->player2_token, TOKEN_LENGTH);
+    } else {
         winner = get_user_name_by_token(game_state->player1_token);
-    }
-
-    // 승자 기록을 history.txt에 추가
-    char game_log_path[256];
-    snprintf(game_log_path, sizeof(game_log_path), GAME_HISTORY, room_id);
-    FILE *log_file = fopen(game_log_path, "a");
-    if (log_file) {
-        fprintf(log_file, "Game Over! Winner by forfeit: %s\n", winner ? winner : "Unknown");
-        fclose(log_file);
+        strncpy(game_state->winner_token, game_state->player1_token, TOKEN_LENGTH);
     }
 
     // 성공 응답 반환
@@ -93,8 +87,11 @@ void forfeit_game_handler(int client_socket, cJSON *json_request) {
              "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
              "Access-Control-Allow-Headers: Content-Type\r\n"
              "Content-Type: application/json\r\n\r\n"
-             "{\"status\":\"success\",\"message\":\"%s forfeited the game. Winner: %s\",\"room_id\":%d}",
-             player_name, winner ? winner : "Unknown", room_id);
+             "{\"status\":\"success\",\"message\":\"Game forfeited\","
+             "\"game_over\":true,\"winner_token\":\"%s\","
+             "\"game_over_reason\":\"forfeit\"}",
+             game_state->winner_token);
+
     write(client_socket, success_response, strlen(success_response));
 
     // 서버 로그 출력

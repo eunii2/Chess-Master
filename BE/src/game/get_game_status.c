@@ -99,8 +99,6 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     cJSON_AddStringToObject(response_json, "status", "success");
     cJSON_AddNumberToObject(response_json, "room_id", game_state->room_id);
     cJSON_AddStringToObject(response_json, "current_player_token", game_state->current_player_token);
-    cJSON_AddStringToObject(response_json, "player1_token", game_state->player1_token);
-    cJSON_AddStringToObject(response_json, "player2_token", game_state->player2_token);
     cJSON_AddStringToObject(response_json, "player1_username",
                             player1_username ? player1_username : "Player 1");
     cJSON_AddStringToObject(response_json, "player2_username",
@@ -108,6 +106,17 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     cJSON_AddStringToObject(response_json, "player1_username", player1_username);
     cJSON_AddStringToObject(response_json, "player2_username", player2_username);
     cJSON_AddBoolToObject(response_json, "game_over", game_state->game_over);
+
+    // 게임이 종료된 경우 승자와 종료 이유 추가
+    if (game_state->game_over) {
+        cJSON_AddStringToObject(response_json, "winner_token", game_state->winner_token);
+        // 기권으로 인한 종료인지 확인
+        if (game_state->forfeit_token[0] != '\0') {
+            cJSON_AddStringToObject(response_json, "game_over_reason", "forfeit");
+        } else {
+            cJSON_AddStringToObject(response_json, "game_over_reason", "king_captured");
+        }
+    }
 
     // 체스판 상태를 JSON 배열로 추가
     cJSON *board_array = cJSON_CreateArray();
