@@ -323,6 +323,9 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
     if (is_king_captured(chessboard)) {
         game_state->game_over = 1;
 
+        // 승자의 토큰 설정 (현재 플레이어가 승자)
+        strncpy(game_state->winner_token, game_state->current_player_token, TOKEN_LENGTH);
+
         // 승자 확인
         char *winner = NULL;
         if (strcmp(game_state->current_player_token, game_state->player1_token) == 0) {
@@ -345,8 +348,13 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
         snprintf(response, sizeof(response),
                  "HTTP/1.1 200 OK\r\n"
                  "Content-Type: application/json\r\n\r\n"
-                 "{\"status\":\"success\",\"message\":\"King captured. Game over! Winner: %s\"}",
-                 winner ? winner : "Unknown");
+                 "{\"status\":\"success\","
+                 "\"message\":\"King captured. Game over! Winner: %s\","
+                 "\"game_over\":true,"
+                 "\"winner_token\":\"%s\","
+                 "\"game_over_reason\":\"king_captured\"}",
+                 winner ? winner : "Unknown",
+                 game_state->winner_token);
         write(client_socket, response, strlen(response));
 
         printf("Game over: A king has been captured. Winner: %s\n", winner);

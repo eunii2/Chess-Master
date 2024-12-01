@@ -19,6 +19,9 @@ typedef struct {
     char player2_token[TOKEN_LENGTH + 1];
     char current_player_token[TOKEN_LENGTH + 1]; // 현재 턴인 플레이어의 토큰
     int game_started;
+    char winner_token[TOKEN_LENGTH];
+    char game_over_reason[32];
+    char forfeit_token[TOKEN_LENGTH];
 } GameState;
 
 // 체스판 관련 전역 변수
