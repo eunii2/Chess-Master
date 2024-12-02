@@ -179,7 +179,10 @@ const GameListPage = () => {
       
       const games = await gameService.getUserGameHistory();
       console.log('받아온 게임 기록:', games);
-      setGameHistory(games);
+      
+      const sortedGames = games.sort((a, b) => a.roomId - b.roomId);
+      
+      setGameHistory(sortedGames);
     } catch (error) {
       console.error('게임 기록 불러오기 실패:', error);
     }
@@ -201,7 +204,12 @@ const GameListPage = () => {
         const token = localStorage.getItem('userToken');
         const response = await gameService.getRoomList(token);
         console.log('Fetched Rooms:', response);
-        setRooms(response.rooms);
+        
+        const sortedRooms = response.rooms.sort((a, b) => {
+          return b.room_id - a.room_id;
+        });
+        
+        setRooms(sortedRooms);
         setProfileImage(response.profile_image || defaultProfileImage);
         setLoading(false);
       } catch (err) {
@@ -211,10 +219,8 @@ const GameListPage = () => {
     };
 
     fetchRooms();
-
-    const intervalId = setInterval(fetchRooms, 1000); // 5초마다 방 목록 갱신
-
-    return () => clearInterval(intervalId); // 컴포넌트 언마운트 시 인터벌 정리
+    const intervalId = setInterval(fetchRooms, 1000);
+    return () => clearInterval(intervalId);
   }, []);
 
   if (loading) return <LoadingMessage>로딩 중...</LoadingMessage>;

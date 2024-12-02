@@ -105,8 +105,11 @@ export const CreateRoomButton = styled.button`
 
 export const RoomGrid = styled.div`
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
 `;
 
 export const RoomCard = styled.div`
@@ -449,8 +452,34 @@ export const HistoryPopup = styled.div`
 export const HistoryList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  width: 100%;
+  gap: 8px;
+  max-height: 450px;
+  overflow-y: auto;
+  
+  /* 기본적으로 스크롤바 숨기기 */
+  &::-webkit-scrollbar {
+    width: 6px;
+    display: none;
+  }
+  
+  /* 호버 시 스크롤바 표시 */
+  &:hover::-webkit-scrollbar {
+    display: block;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+    
+    &:hover {
+      background: rgba(0, 0, 0, 0.2);
+    }
+  }
 `;
 
 export const HistoryItem = styled.div`

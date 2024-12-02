@@ -98,45 +98,87 @@ void get_room_list_handler(int client_socket, cJSON *json_request) {
 
     cJSON *room_list_json = cJSON_CreateArray();
     char buffer[512];
+    
+    // 모든 방을 저장할 임시 배열 생성
+    struct RoomInfo {
+        int room_id;
+        char room_name[100];
+        int created_by;
+        int joined_status;
+        const char *profile_image;
+    };
+    
+    struct RoomInfo *rooms = NULL;
+    int room_count = 0;
+    int room_capacity = 10;
+    rooms = malloc(room_capacity * sizeof(struct RoomInfo));
 
+    // 모든 방 정보를 임시 배열에 저장
     while (fgets(buffer, sizeof(buffer), file)) {
+        if (room_count >= room_capacity) {
+            room_capacity *= 2;
+            rooms = realloc(rooms, room_capacity * sizeof(struct RoomInfo));
+        }
+
         int room_id, created_by, joined_user_id;
         char room_name[100];
         int joined_status = 0;
 
-        // Parse the line, including the 'joined' field if present
         int num_fields = sscanf(buffer, "Room ID: %d, Room Name: %99[^,], Created By: %d, joined: %d",
-                                &room_id, room_name, &created_by, &joined_user_id);
+                              &room_id, room_name, &created_by, &joined_user_id);
 
         if (num_fields >= 3) {
             if (num_fields == 4) {
                 joined_status = 1;
             }
 
-            cJSON *room_json = cJSON_CreateObject();
-            cJSON_AddNumberToObject(room_json, "room_id", room_id);
-            cJSON_AddStringToObject(room_json, "room_name", room_name);
-            cJSON_AddBoolToObject(room_json, "joined", joined_status);
+            rooms[room_count].room_id = room_id;
+            strncpy(rooms[room_count].room_name, room_name, sizeof(rooms[room_count].room_name) - 1);
+            rooms[room_count].created_by = created_by;
+            rooms[room_count].joined_status = joined_status;
 
-            // 방을 만든 사람의 프로필 사진 및 이름 추가
-            const char *profile_image = NULL;
+            // 프로필 이미지 찾기
+            rooms[room_count].profile_image = NULL;
             for (size_t i = 0; i < user_list.size; i++) {
                 if (user_list.entries[i].user_id == created_by) {
-                    profile_image = user_list.entries[i].image_address;
+                    rooms[room_count].profile_image = user_list.entries[i].image_address;
                     break;
                 }
             }
 
-            if (profile_image) {
-                cJSON_AddStringToObject(room_json, "profile_image", profile_image);
-            } else {
-                cJSON_AddNullToObject(room_json, "profile_image");
-            }
-
-            cJSON_AddItemToArray(room_list_json, room_json);
+            room_count++;
         }
     }
     fclose(file);
+
+    // room_id 기준으로 내림차순 정렬 (최신순)
+    for (int i = 0; i < room_count - 1; i++) {
+        for (int j = 0; j < room_count - i - 1; j++) {
+            if (rooms[j].room_id < rooms[j + 1].room_id) {
+                struct RoomInfo temp = rooms[j];
+                rooms[j] = rooms[j + 1];
+                rooms[j + 1] = temp;
+            }
+        }
+    }
+
+    // 정렬된 방 정보를 JSON 배열에 추가
+    for (int i = 0; i < room_count; i++) {
+        cJSON *room_json = cJSON_CreateObject();
+        cJSON_AddNumberToObject(room_json, "room_id", rooms[i].room_id);
+        cJSON_AddStringToObject(room_json, "room_name", rooms[i].room_name);
+        cJSON_AddBoolToObject(room_json, "joined", rooms[i].joined_status);
+
+        if (rooms[i].profile_image) {
+            cJSON_AddStringToObject(room_json, "profile_image", rooms[i].profile_image);
+        } else {
+            cJSON_AddNullToObject(room_json, "profile_image");
+        }
+
+        cJSON_AddItemToArray(room_list_json, room_json);
+    }
+
+    free(rooms);
 
     // 유저 리스트 메모리 해제
     free_user_list(&user_list);
