@@ -261,6 +261,20 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
     char piece = chessboard[from_row][from_col];
     printf("Attempting to move piece '%c' from %s to %s\n", piece, from_position, to_position);
 
+    // 플레이어와 기물 색상 체크 추가
+    bool is_player1 = (strcmp(game_state->player1_token, token) == 0);
+    bool is_white_piece = isupper(piece);
+
+    if ((is_player1 && !is_white_piece) || (!is_player1 && is_white_piece)) {
+        printf("Error: Player can only move their own color pieces\n");
+        const char *error_response =
+                "HTTP/1.1 400 Bad Request\r\n"
+                "Content-Type: application/json\r\n\r\n"
+                "{\"status\":\"error\",\"message\":\"You can only move your own color pieces\"}";
+        write(client_socket, error_response, strlen(error_response));
+        return;
+    }
+
     // 유효하지 않은 소스 확인
     if (piece == ' ') {
         printf("Error: No piece at the source position (%s)\n", from_position);
@@ -299,9 +313,9 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
     // 현재 플레이어의 사용자 이름 가져오기
     char *player_name = get_user_name_by_token(token);
 
-    // history.txt에 기록 추가
+    // **history.txt에 기록 추가**
     char history_file[256];
-    snprintf(history_file, sizeof(history_file), "../data/game/%d/history.txt", room_id);
+    snprintf(history_file, sizeof(history_file), GAME_HISTORY, room_id);
 
     FILE *history = fopen(history_file, "a");
     if (history) {
@@ -336,10 +350,10 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
 
         // 승자 기록을 history.txt에 추가
         char game_log_path[256];
-        snprintf(game_log_path, sizeof(game_log_path), "../data/game/%d/history.txt", room_id);
+        snprintf(game_log_path, sizeof(game_log_path), GAME_HISTORY, room_id);
         FILE *log_file = fopen(game_log_path, "a");
         if (log_file) {
-            fprintf(log_file, "Game Over! King captured. Winner: %s\n", winner ? winner : "Unknown");
+            fprintf(log_file, "Game Over! Winner: %s\n", winner ? winner : "Unknown");
             fclose(log_file);
         }
 
