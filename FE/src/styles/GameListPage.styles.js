@@ -15,7 +15,7 @@ export const NavBar = styled.nav`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem 3rem;
+    padding: 1.5rem 6rem;
     background: #ffffffdd;
     backdrop-filter: blur(10px);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
@@ -43,7 +43,7 @@ export const LogoText = styled.span`
     background: linear-gradient(135deg, #1e293b 0%, #64748b 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    font-size: 1.6rem;
+    font-size: 2rem;
 `;
 
 export const LogoutButton = styled.button`
@@ -55,6 +55,7 @@ export const LogoutButton = styled.button`
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
+    margin-left: 0.5rem;
 
     &:hover {
         background: #e11d48;
@@ -65,9 +66,7 @@ export const LogoutButton = styled.button`
 `;
 
 export const Content = styled.main`
-    max-width: 1280px;
-    margin: 2rem auto;
-    padding: 0 2rem;
+    margin: 2rem 6rem;
     animation: ${fadeIn} 0.6s ease-out;
 `;
 
@@ -83,7 +82,7 @@ export const Title = styled.h1`
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    font-weight: 700;
+    font-size : 2rem;
 `;
 
 export const CreateRoomButton = styled.button`
@@ -286,8 +285,7 @@ export const CreatorProfileImage = styled.img`
 export const ProfileContainer = styled.div`
     display: flex;
     align-items: center;
-    margin-left: auto;
-    flex-shrink: 0;
+    gap: 0.5rem;
 `;
 
 export const RoomNameContainer = styled.div`
@@ -334,8 +332,8 @@ export const UploadImage = styled.img`
 
 export const HistoryButton = styled.button`
   position: fixed;
-  bottom: 5rem;
-  right: 5rem;
+  bottom: 6rem;
+  right: 6rem;
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -382,8 +380,8 @@ export const HistoryIcon = styled.img`
 
 export const HistoryPopup = styled.div`
   position: fixed;
-  bottom: 10.2rem;
-  right: 5rem;
+  bottom: 12rem;
+  right: 6rem;
   background: white;
   border-radius: 12px;
   padding: 1.5rem;
