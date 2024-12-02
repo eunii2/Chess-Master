@@ -13,7 +13,11 @@ export const Board = styled.div`
 
 export const Square = styled.div`
   aspect-ratio: 1;
-  background-color: ${props => (props.$isLight ? '#fff' : '#999')};
+  background-color: ${props => {
+    if (props.$isHighlightFrom) return '#fff3cd';
+    if (props.$isHighlightTo) return '#d4edda';
+    return props.$isLight ? '#fff' : '#999';
+  }};
   display: flex;
   justify-content: center;
   align-items: center;

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Board, Square, Piece } from '../styles/Chessboard.styles';
 import styled from 'styled-components';
 
-const Chessboard = ({ isCreator, onSquareClick, gameStatus }) => {
+const Chessboard = ({ isCreator, onSquareClick, gameStatus, highlightSquares }) => {
   const [selectedPiece, setSelectedPiece] = useState(null);
 
   const toChessNotation = (row, col) => {
@@ -20,7 +20,9 @@ const Chessboard = ({ isCreator, onSquareClick, gameStatus }) => {
         setSelectedPiece({ position, row, col });
       }
     } else {
-      onSquareClick(selectedPiece.position, position);
+      if (onSquareClick) {
+        onSquareClick(selectedPiece.position, position);
+      }
       setSelectedPiece(null);
     }
   };
@@ -32,12 +34,16 @@ const Chessboard = ({ isCreator, onSquareClick, gameStatus }) => {
     const piece = gameStatus?.board?.[actualRow]?.[actualCol] || ' ';
     const position = toChessNotation(row, col);
     const isSelected = selectedPiece?.row === actualRow && selectedPiece?.col === actualCol;
+    const isHighlightFrom = position === highlightSquares?.from;
+    const isHighlightTo = position === highlightSquares?.to;
 
     return (
       <Square 
         key={position} 
         $isLight={isLight}
         $isSelected={isSelected}
+        $isHighlightFrom={isHighlightFrom}
+        $isHighlightTo={isHighlightTo}
         onClick={() => handleSquareClick(position, actualRow, actualCol)}
       >
         {piece !== ' ' && (
