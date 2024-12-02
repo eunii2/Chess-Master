@@ -61,7 +61,9 @@ void start_game_handler(int client_socket, cJSON *json_request) {
                 "Access-Control-Allow-Origin: http://localhost:5173\r\n"
                 "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
                 "Access-Control-Allow-Headers: Content-Type\r\n"
-                "Content-Type: application/json\r\n\r\n"
+                "Content-Type: application/json\r\n"
+                "Content-Length: 47\r\n"
+                "\r\n"
                 "{\"status\":\"error\",\"message\":\"Invalid input\"}";
         write(client_socket, response, strlen(response));
         return;
@@ -94,6 +96,11 @@ void start_game_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 토큰 비교 전에 로그 추가
+    printf("Comparing tokens - Player1: '%s', Received: '%s'\n", 
+           game_state->player1_token, 
+           token);
+
     // 토큰이 방장의 토큰인지 확인
     if (strcmp(game_state->player1_token, token) != 0) {
         const char *response =
@@ -110,9 +117,35 @@ void start_game_handler(int client_socket, cJSON *json_request) {
     // 게임 시작 상태 업데이트
     game_state->game_started = 1;  // 게임 시작 상태 설정
 
-    // 참가자에게 게임 시작 알림 전송
-    const char *response = "{\"status\":\"success\",\"message\":\"Game started\"}";
-    write(client_socket, response, strlen(response));
+    // 성공 응답 JSON 먼저 생성
+    cJSON *response_json = cJSON_CreateObject();
+    cJSON_AddStringToObject(response_json, "status", "success");
+    cJSON_AddStringToObject(response_json, "message", "Game started");
+    cJSON_AddNumberToObject(response_json, "room_id", room_id);
+    
+    char *json_str = cJSON_Print(response_json);
+    int json_len = strlen(json_str);
+
+    // HTTP 응답 헤더와 본문 조합
+    char response_buffer[1024];
+    int response_len = snprintf(response_buffer, sizeof(response_buffer),
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: application/json\r\n"
+        "Content-Length: %d\r\n"
+        "Access-Control-Allow-Origin: http://localhost:5173\r\n"
+        "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
+        "Access-Control-Allow-Headers: Content-Type\r\n"
+        "\r\n"
+        "%s", json_len, json_str);
+
+    // 응답 전송
+    write(client_socket, response_buffer, response_len);
+    
+    // 메모리 해제
+    cJSON_Delete(response_json);
+    free(json_str);
+
+    printf("Response sent: %s\n", response_buffer);  // 디버깅용 로그
 
     // **두 명의 플레이어가 참가했는지 확인**
     if (strlen(game_state->player1_token) == 0 || strlen(game_state->player2_token) == 0) {
@@ -196,16 +229,4 @@ void start_game_handler(int client_socket, cJSON *json_request) {
     if (rename("../data/temp_room_list.txt", ROOM_LIST_FILE) != 0) {
         perror("Error renaming temp_room_list.txt to room_list.txt");
     }
-
-    // 성공 응답 반환
-    char success_response[512];
-    snprintf(success_response, sizeof(success_response),
-             "HTTP/1.1 200 OK\r\n"
-             "Access-Control-Allow-Origin: http://localhost:5173\r\n"
-             "Access-Control-Allow-Methods: POST, GET, OPTIONS, DELETE\r\n"
-             "Access-Control-Allow-Headers: Content-Type\r\n"
-             "Content-Type: application/json\r\n\r\n"
-             "{\"status\":\"success\",\"message\":\"Game started\",\"room_id\":%d}",
-             room_id);
-    write(client_socket, success_response, strlen(success_response));
 }
