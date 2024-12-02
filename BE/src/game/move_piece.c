@@ -299,9 +299,9 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
     // 현재 플레이어의 사용자 이름 가져오기
     char *player_name = get_user_name_by_token(token);
 
-    // **history.txt에 기록 추가**
+    // history.txt에 기록 추가
     char history_file[256];
-    snprintf(history_file, sizeof(history_file), GAME_HISTORY, room_id);
+    snprintf(history_file, sizeof(history_file), "../data/game/%d/history.txt", room_id);
 
     FILE *history = fopen(history_file, "a");
     if (history) {
@@ -336,10 +336,10 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
 
         // 승자 기록을 history.txt에 추가
         char game_log_path[256];
-        snprintf(game_log_path, sizeof(game_log_path), GAME_HISTORY, room_id);
+        snprintf(game_log_path, sizeof(game_log_path), "../data/game/%d/history.txt", room_id);
         FILE *log_file = fopen(game_log_path, "a");
         if (log_file) {
-            fprintf(log_file, "Game Over! Winner: %s\n", winner ? winner : "Unknown");
+            fprintf(log_file, "Game Over! King captured. Winner: %s\n", winner ? winner : "Unknown");
             fclose(log_file);
         }
 
