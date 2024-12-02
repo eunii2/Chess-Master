@@ -22,7 +22,7 @@ extern const char *cors_headers;
 #define LOG_FILE_PATH_FORMAT "../data/game/%d/game_log.txt"
 
 // 토큰 길이 정의
-#define TOKEN_LENGTH 32
+#define TOKEN_LENGTH 37
 
 #include <stdbool.h>
 extern bool is_game_over;

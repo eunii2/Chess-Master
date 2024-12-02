@@ -74,10 +74,12 @@ void forfeit_game_handler(int client_socket, cJSON *json_request) {
     char *winner = NULL;
     if (strcmp(game_state->player1_token, token) == 0) {
         winner = get_user_name_by_token(game_state->player2_token);
-        strncpy(game_state->winner_token, game_state->player2_token, TOKEN_LENGTH);
+        snprintf(game_state->winner_token, sizeof(game_state->winner_token), "%s", game_state->player2_token);
+
     } else {
         winner = get_user_name_by_token(game_state->player1_token);
-        strncpy(game_state->winner_token, game_state->player1_token, TOKEN_LENGTH);
+        snprintf(game_state->winner_token, sizeof(game_state->winner_token), "%s", game_state->player1_token);
+
     }
 
     // history.txt에 기권 기록 추가

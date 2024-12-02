@@ -99,12 +99,13 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     cJSON_AddStringToObject(response_json, "status", "success");
     cJSON_AddNumberToObject(response_json, "room_id", game_state->room_id);
     cJSON_AddStringToObject(response_json, "current_player_token", game_state->current_player_token);
+    // 사용자 토큰 추가
+    cJSON_AddStringToObject(response_json, "player1_token", game_state->player1_token);
+    cJSON_AddStringToObject(response_json, "player2_token", game_state->player2_token);
     cJSON_AddStringToObject(response_json, "player1_username",
                             player1_username ? player1_username : "Player 1");
     cJSON_AddStringToObject(response_json, "player2_username",
                             player2_username ? player2_username : "Player 2");
-//    cJSON_AddStringToObject(response_json, "player1_username", player1_username);
-//    cJSON_AddStringToObject(response_json, "player2_username", player2_username);
     cJSON_AddBoolToObject(response_json, "game_over", game_state->game_over);
 
     // 게임이 종료된 경우 승자와 종료 이유 추가

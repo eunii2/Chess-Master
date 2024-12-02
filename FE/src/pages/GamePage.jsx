@@ -127,10 +127,18 @@ const GamePage = () => {
   const handleSurrender = async () => {
     try {
       await gameService.forfeitGame(roomId, currentUserToken);
-      //alert(isCreator ? "백이 기권했습니다." : "흑이 기권했습니다.");
+      const updatedStatus = await gameService.getGameStatus(roomId, currentUserToken);
+      setGameStatus(updatedStatus);
+  
+      // 게임 종료 메시지 추가
+      if (isCreator) {
+        alert("백이 기권했습니다."); // 백(White)이 기권
+      } else {
+        alert("흑이 기권했습니다."); // 흑(Black)이 기권
+      }
     } catch (error) {
-      console.error('Surrender failed:', error);
-      alert('기권에 실패했습니다.');
+      console.error("Surrender failed:", error);
+      alert("기권에 실패했습니다.");
     }
   };
 
@@ -151,6 +159,7 @@ const GamePage = () => {
         console.error('Failed to fetch messages:', error);
       }
     };
+
 
     // 초기 메시지 로드
     fetchMessages();
@@ -179,44 +188,43 @@ const GamePage = () => {
     }
   };
 
-  useEffect(() => {
-    if (gameStatus?.game_over) {
-      console.log('Game Status:', gameStatus); // 디버깅을 위한 로그 추가
-      
-      // 현재 플레이어가 승자인지 확인
-      const amIWinner = gameStatus.winner_token === currentUserToken;
-      
-      setGameResult({
-        isWin: amIWinner,
-        reason: gameStatus.game_over_reason,
-        winner: gameStatus.winner_username
-      });
-    }
-  }, [gameStatus, currentUserToken]);
-
-  const getGameOverMessage = () => {
-    console.log('Game Result:', gameResult); // 디버깅을 위한 로그 추가
+  // 게임 상태 확인 및 결과 처리
+useEffect(() => {
+  if (gameStatus?.game_over) {
+    console.log('Game Status:', gameStatus); // 디버깅 로그
     
-    if (gameResult.reason === 'king_captured') {
-      return gameResult.isWin ? 
-        "상대방의 왕을 잡았습니다" : 
-        "당신의 왕이 잡혔습니다";
-    } else if (gameResult.reason === 'forfeit') {
-      return gameResult.isWin ? 
-        "상대방이 기권했습니다" : 
-        "당신이 기권했습니다";
-    }
-    return "게임이 종료되었습니다"; // 기본 메시지
-  };
+    // 승리 여부 확인
+    const amIWinner = gameStatus.winner_token === currentUserToken;
 
-  useEffect(() => {
-    console.log('Current Player Debug:', {
-      currentPlayerToken: gameStatus?.current_player_token,
-      myToken: currentUserToken,
-      isMyTurn: gameStatus?.current_player_token === currentUserToken
+    // 게임 결과 설정
+    setGameResult({
+      isWin: amIWinner,
+      reason: gameStatus.game_over_reason,
+      winner: gameStatus.winner_token === gameStatus.player1_token
+        ? gameStatus.player1_username
+        : gameStatus.player2_username,
     });
-  }, [gameStatus, currentUserToken]);
+  }
+}, [gameStatus, currentUserToken]);
 
+// 게임 종료 메시지 반환
+const getGameOverMessage = () => {
+  if (!gameResult) return '게임이 종료되었습니다'; // 안전 장치
+
+  if (gameResult.reason === 'king_captured') {
+    return gameResult.isWin ? '상대방의 왕을 잡았습니다' : '당신의 왕이 잡혔습니다';
+  } else if (gameResult.reason === 'forfeit') {
+    return gameResult.isWin ? '상대방이 기권했습니다' : '당신이 기권했습니다';
+  }
+  return '게임이 종료되었습니다'; // 기본 메시지
+};
+
+// 디버깅 로그 추가
+useEffect(() => {
+  console.log('Calculated Game Result:', gameResult);
+}, [gameResult]);
+
+  
   return (
     <GameContainer>
       <ChessboardContainer>
@@ -294,7 +302,7 @@ const GamePage = () => {
         </ChatContainer>
       </SideContainer>
       
-      {gameResult && (
+      {gameResult && gameResult.reason && (
         <GameOverlay>
           <GameOverModal>
             <GameOverTitle $isWin={gameResult.isWin}>
@@ -314,6 +322,7 @@ const GamePage = () => {
           </GameOverModal>
         </GameOverlay>
       )}
+      
     </GameContainer>
   );
 };
