@@ -95,7 +95,7 @@ const GameRoom = () => {
     try {
       const token = localStorage.getItem('userToken');
       await gameService.leaveRoom(roomId, token);
-      navigate('/game-list');
+      navigate('/games');
     } catch (err) {
       setError('방을 나가는데 실패했습니다.');
     }
