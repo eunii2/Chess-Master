@@ -35,6 +35,20 @@ void create_room_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 사용자 이름 가져오기
+    char *username = get_user_name_by_token(token);
+    if (!username) {
+        char error_response[512];
+        snprintf(error_response, sizeof(error_response),
+                 "HTTP/1.1 500 Internal Server Error\r\n"
+                 "Content-Type: application/json\r\n"
+                 "%s\r\n"
+                 "{\"status\":\"error\",\"message\":\"Failed to get username\"}",
+                 cors_headers);
+        write(client_socket, error_response, strlen(error_response));
+        return;
+    }
+
     // 파일을 읽기 모드로 열기
     FILE *file = fopen(ROOM_LIST_FILE, "r");
     if (!file) {
@@ -116,7 +130,8 @@ void create_room_handler(int client_socket, cJSON *json_request) {
         write(client_socket, error_response, strlen(error_response));
         return;
     }
-    fprintf(file, "Room ID: %d, Room Name: %s, Created By: %d\n", room_id, room_name, user_id);
+    fprintf(file, "Room ID: %d, Room Name: %s, Created By: %d, Creator Username: %s\n", 
+            room_id, room_name, user_id, username);
     fclose(file);
 
     char success_response[512];

@@ -72,6 +72,8 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
     int is_creator = 0;
     int has_joined_members = 0;
     char room_name[100] = "";
+    char creator_username[100] = "";
+    char joined_username[100] = "";
 
     while (fgets(buffer, sizeof(buffer), file)) {
         int current_room_id, creator_id;
@@ -80,8 +82,18 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
             if (creator_id == user_id) {
                 is_creator = 1;
             }
-            if (strstr(buffer, "joined:")) {
+
+            // 방장의 이름 찾기
+            char *creator_name_pos = strstr(buffer, "Creator Username: ");
+            if (creator_name_pos) {
+                sscanf(creator_name_pos + strlen("Creator Username: "), "%[^,]", creator_username);
+            }
+
+            // 참가자의 이름 찾기
+            char *joined_name_pos = strstr(buffer, "joined_username: ");
+            if (joined_name_pos) {
                 has_joined_members = 1;
+                sscanf(joined_name_pos + strlen("joined_username: "), "%[^,\n]", joined_username);
             }
             break;
         }
@@ -100,15 +112,24 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
-    char success_response[512];
+    char success_response[1024];
     snprintf(success_response, sizeof(success_response),
              "HTTP/1.1 200 OK\r\n"
              "Content-Type: application/json\r\n"
              "%s\r\n"
-             "{\"status\":\"success\",\"room_name\":\"%s\",\"is_creator\":%s,\"has_joined_members\":%s,\"game_started\":%s}",
+             "{\"status\":\"success\","
+             "\"room_name\":\"%s\","
+             "\"is_creator\":%s,"
+             "\"has_joined_members\":%s,"
+             "\"game_started\":%s,"
+             "\"creator_username\":\"%s\","
+             "\"joined_username\":\"%s\"}",
              cors_headers, room_name,
              is_creator ? "true" : "false",
              has_joined_members ? "true" : "false",
-             game_started ? "true" : "false");  // 게임 시작 상태 추가
+             game_started ? "true" : "false",
+             creator_username,
+             has_joined_members ? joined_username : "");
+    
     write(client_socket, success_response, strlen(success_response));
 }

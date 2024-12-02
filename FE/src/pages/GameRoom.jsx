@@ -41,34 +41,22 @@ const GameRoom = () => {
         setRoomName(response.room_name);
         setIsCreator(response.is_creator);
         
-        if (response.is_creator) {
-          setPlayers([
-            {
-              username: '방장',
-              isCreator: true
-            },
-            ...(response.has_joined_members ? [{
-              username: '참가자',
-              isCreator: false
-            }] : [])
-          ]);
-        } else {
-          setPlayers([
-            {
-              username: '방장',
-              isCreator: true
-            },
-            {
-              username: '참가자',
-              isCreator: false
-            }
-          ]);
-        }
+        setPlayers([
+          {
+            username: '방장',
+            playerName: response.creator_username,
+            isCreator: true
+          },
+          ...(response.has_joined_members ? [{
+            username: '참가자',
+            playerName: response.joined_username,
+            isCreator: false
+          }] : [])
+        ]);
 
-        // 게임 시작 상태 확인
         if (response.game_started) {
           setGameStarted(true);
-          navigate(`/game/${roomId}`); // 게임 화면으로 이동
+          navigate(`/game/${roomId}`);
         }
       } catch (err) {
         console.error('Room Status Error:', err);
@@ -114,7 +102,12 @@ const GameRoom = () => {
         <PlayerSection>
           {players.map((player, index) => (
             <Player key={index}>
-              <PlayerName>{player.username}</PlayerName>
+              <PlayerName>
+                {player.username}&nbsp;&nbsp;
+                <span style={{ fontWeight: 'normal' }}>
+                  {player.playerName}
+                </span>
+              </PlayerName>
               <PlayerStatus isCreator={player.isCreator}>
                 {player.isCreator ? '방장' : '준비완료'}
               </PlayerStatus>

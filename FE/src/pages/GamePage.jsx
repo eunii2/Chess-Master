@@ -132,11 +132,11 @@ const GamePage = () => {
       setGameStatus(updatedStatus);
   
       // 게임 종료 메시지 추가
-      if (isCreator) {
-        alert("백이 기권했습니다."); // 백(White)이 기권
-      } else {
-        alert("흑이 기권했습니다."); // 흑(Black)이 기권
-      }
+      // if (isCreator) {
+      //   alert("백이 기권했습니다."); // 백(White)이 기권
+      // } else {
+      //   alert("흑이 기권했습니다."); // 흑(Black)이 기권
+      // }
     } catch (error) {
       console.error("Surrender failed:", error);
       alert("기권에 실패했습니다.");

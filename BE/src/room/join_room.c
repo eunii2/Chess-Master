@@ -92,21 +92,21 @@ void join_room_handler(int client_socket, cJSON *json_request) {
                 return;
             }
 
-            // 'joined' 정보 추가
-            char temp_line[512];
-            snprintf(temp_line, sizeof(temp_line), "%s, joined: %d", buffer, user_id);
-            free(lines[line_count]);
-            lines[line_count] = strdup(temp_line);
-            if (!lines[line_count]) {
-                perror("strdup error");
-                fclose(file);
-                for (int i = 0; i <= line_count; i++) {
-                    free(lines[i]);
-                }
+            // 사용자 이름 가져오기
+            char *username = get_user_name_by_token(token);
+            if (!username) {
+                // 에러 처리
                 return;
             }
 
-            // GameState에 후공 플레이어의 토큰 추가
+            // 'joined' 정보에 사용자 이름도 추가
+            char temp_line[512];
+            snprintf(temp_line, sizeof(temp_line), "%s, joined: %d, joined_username: %s", 
+                     buffer, user_id, username);
+            free(lines[line_count]);
+            lines[line_count] = strdup(temp_line);
+
+            // GameState에 후공 플레이어의 토큰과 이름 추가
             GameState *game_state = get_game_state(room_id);
             if (game_state) {
                 strncpy(game_state->player2_token, token, TOKEN_LENGTH);
