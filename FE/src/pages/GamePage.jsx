@@ -27,7 +27,6 @@ import {
   HomeButton,
   RecordButton
 } from '../styles/GamePage.styles';
-import GameHistory from './GameHistory';
 
 const GamePage = () => {
   const { roomId } = useParams();
@@ -128,7 +127,7 @@ const GamePage = () => {
   const handleSurrender = async () => {
     try {
       await gameService.forfeitGame(roomId, currentUserToken);
-      alert(isCreator ? "백이 기권했습니다." : "흑이 기권했습니다.");
+      //alert(isCreator ? "백이 기권했습니다." : "흑이 기권했습니다.");
     } catch (error) {
       console.error('Surrender failed:', error);
       alert('기권에 실패했습니다.');
@@ -314,10 +313,6 @@ const GamePage = () => {
             </ButtonContainer>
           </GameOverModal>
         </GameOverlay>
-      )}
-      
-      {gameStatus?.game_over && (
-        <GameHistory roomId={roomId} />
       )}
     </GameContainer>
   );
