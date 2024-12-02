@@ -43,7 +43,7 @@ void server_run() {
         close(server_socket);
         exit(1);
     }
-    if (listen(server_socket, 20) == -1) {
+    if (listen(server_socket, 30) == -1) {
         perror("listen error");
         close(server_socket);
         exit(1);
