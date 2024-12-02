@@ -68,6 +68,7 @@ void forfeit_game_handler(int client_socket, cJSON *json_request) {
     // 게임 종료 상태 설정
     game_state->game_over = 1;
     strncpy(game_state->forfeit_token, token, TOKEN_LENGTH);
+    strncpy(game_state->game_over_reason, "forfeit", sizeof(game_state->game_over_reason));
 
     // 상대방의 승리자 확인
     char *winner = NULL;
@@ -77,6 +78,15 @@ void forfeit_game_handler(int client_socket, cJSON *json_request) {
     } else {
         winner = get_user_name_by_token(game_state->player1_token);
         strncpy(game_state->winner_token, game_state->player1_token, TOKEN_LENGTH);
+    }
+
+    // history.txt에 기권 기록 추가
+    char history_file[256];
+    snprintf(history_file, sizeof(history_file), "../data/game/%d/history.txt", room_id);
+    FILE *history = fopen(history_file, "a");
+    if (history) {
+        fprintf(history, "Game Over! The opponent has forfeited. Winner: %s\n", winner ? winner : "Unknown");
+        fclose(history);
     }
 
     // 성공 응답 반환
