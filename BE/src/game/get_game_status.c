@@ -105,8 +105,8 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
                             player1_username ? player1_username : "Player 1");
     cJSON_AddStringToObject(response_json, "player2_username",
                             player2_username ? player2_username : "Player 2");
-    cJSON_AddStringToObject(response_json, "player1_username", player1_username);
-    cJSON_AddStringToObject(response_json, "player2_username", player2_username);
+//    cJSON_AddStringToObject(response_json, "player1_username", player1_username);
+//    cJSON_AddStringToObject(response_json, "player2_username", player2_username);
     cJSON_AddBoolToObject(response_json, "game_over", game_state->game_over);
 
     // 체스판 상태를 JSON 배열로 추가
