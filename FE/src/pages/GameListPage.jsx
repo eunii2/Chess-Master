@@ -177,13 +177,9 @@ const GameListPage = () => {
       const token = localStorage.getItem('userToken');
       console.log('토큰:', token);
       
-      // 임시 데이터
-      const mockHistory = [
-        { id: 1, roomName: "즐거운 체스 한 판", date: "2024-03-20", roomId: "123" },
-        { id: 2, roomName: "실력자만", date: "2024-03-19", roomId: "124" },
-      ];
-      console.log('게임 기록 데이터:', mockHistory);
-      setGameHistory(mockHistory);
+      const games = await gameService.getUserGameHistory();
+      console.log('받아온 게임 기록:', games);
+      setGameHistory(games);
     } catch (error) {
       console.error('게임 기록 불러오기 실패:', error);
     }
@@ -288,11 +284,11 @@ const GameListPage = () => {
               console.log('게임 기록 항목 렌더링:', game);
               return (
                 <HistoryItem 
-                  key={game.id}
-                  onClick
+                  key={game.roomId}
+                  onClick={() => navigate(`/games/${game.roomId}/record`)}
                 >
                   <HistoryTitle>{game.roomName}</HistoryTitle>
-                  <HistoryDate>{game.date}</HistoryDate>
+                  <HistoryDate>{new Date(game.createdAt).toLocaleString('ko-KR')}</HistoryDate>
                 </HistoryItem>
               );
             })}

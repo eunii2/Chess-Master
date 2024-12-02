@@ -77,7 +77,9 @@ void handle_request(int client_socket, const char *method, const char *path, cJS
     else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/get_history") == 0) {
         get_game_history_handler(client_socket, json_request);
     }
-
+    else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/user_history") == 0) {
+        get_user_game_history_handler(client_socket, json_request);
+    }
     else {
         // 지원하지 않는 요청에 대한 404 응답
         const char *not_found = "HTTP/1.1 404 Not Found\r\n"

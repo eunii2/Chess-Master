@@ -266,6 +266,21 @@ getMessages: async (roomId, token) => {
         console.error('Get Game History Error:', error.response?.data || error);
         throw error;
     }
+  },
+
+  getUserGameHistory: async () => {
+    try {
+      const token = localStorage.getItem('userToken');
+      const response = await axios.post('http://localhost:8080/game/user_history', {
+        token: token
+      });
+      
+      console.log('Game history response:', response.data);
+      return response.data.games;
+    } catch (error) {
+      console.error('Error fetching user game history:', error);
+      throw error;
+    }
   }
 };
 

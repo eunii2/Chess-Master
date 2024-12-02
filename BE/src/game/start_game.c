@@ -11,6 +11,9 @@
 // 체스판 데이터
 char chessboard[8][8];
 
+// 가정: 토큰으로부터 사용자 이름을 가져오는 함수
+const char* get_username_from_token(const char* token);
+
 void start_game_in_room(int room_id) {
     pthread_t thread;
     int* args = malloc(2 * sizeof(int));
@@ -169,11 +172,43 @@ void start_game_handler(int client_socket, cJSON *json_request) {
     create_directory(game_dir);
 
     // history 및 chat 파일 생성
-    char history_file[256], chat_file[256];
+    char history_file[256], chat_file[256], info_file[256];
     snprintf(history_file, sizeof(history_file), "%s/history.txt", game_dir);
     snprintf(chat_file, sizeof(chat_file), "%s/chat.txt", game_dir);
+    snprintf(info_file, sizeof(info_file), "%s/info.txt", game_dir);
+
     FILE *history = fopen(history_file, "w");
     FILE *chat = fopen(chat_file, "w");
+    FILE *info = fopen(info_file, "w");
+
+    if (info) {
+        char* player1_username = get_user_name_by_token(game_state->player1_token);
+        char* player2_username = get_user_name_by_token(game_state->player2_token);
+
+        // room_list.txt에서 방 이름 가져오기
+        char room_name[256] = "";
+        FILE *room_list = fopen(ROOM_LIST_FILE, "r");
+        if (room_list) {
+            char line[512];
+            while (fgets(line, sizeof(line), room_list)) {
+                int current_room_id;
+                char current_room_name[256];
+                if (sscanf(line, "Room ID: %d, Room Name: %[^,]", &current_room_id, current_room_name) == 2) {
+                    if (current_room_id == room_id) {
+                        strcpy(room_name, current_room_name);
+                        break;
+                    }
+                }
+            }
+            fclose(room_list);
+        }
+
+        fprintf(info, "Room Name: %s\n", room_name);
+        fprintf(info, "Username: %s, Token: %s\n", player1_username, game_state->player1_token);
+        fprintf(info, "Username: %s, Token: %s\n", player2_username, game_state->player2_token);
+        fclose(info);
+    }
+
     if (history) fclose(history);
     if (chat) fclose(chat);
 

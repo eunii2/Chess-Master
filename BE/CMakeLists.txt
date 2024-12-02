@@ -50,6 +50,7 @@ add_executable(chess_server
         src/chat/send_message.c
         src/chat/get_message.c
         src/game/get_game_history.c
+        src/game/get_user_game_history.c
 )
 
 # 라이브러리 링크
