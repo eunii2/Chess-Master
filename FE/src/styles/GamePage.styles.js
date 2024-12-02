@@ -37,16 +37,29 @@ export const PlayerCard = styled.div`
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 1rem;
-  border: 2px solid ${props => props.$isCurrentPlayer ? '#3b82f6' : '#e2e8f0'};
+  border: 2px solid ${props => props.$isCurrentPlayer ? '#3b82f6' : 'transparent'};
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
 
   &::before {
     content: '';
-    width: 8px;
-    height: 8px;
+    position: absolute;
+    left: 1rem;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: ${props => props.$isCurrentPlayer ? '#22c55e' : '#94a3b8'};
-    transition: background-color 0.2s ease;
+    box-shadow: ${props => props.$isCurrentPlayer ? '0 0 8px #22c55e' : 'none'};
+    transition: all 0.3s ease;
   }
+
+  ${props => props.$isCurrentPlayer && `
+    box-shadow: 0 0 0 1px #3b82f6;
+    background: rgba(59, 130, 246, 0.05);
+  `}
 `;
 
 export const PlayerAvatar = styled.div`
@@ -189,7 +202,7 @@ export const PlayerInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
-  min-width: 200px;
+  margin-left: 2rem;
 `;
 
 export const GameOverlay = styled.div`

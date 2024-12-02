@@ -210,6 +210,14 @@ const GamePage = () => {
     return "게임이 종료되었습니다"; // 기본 메시지
   };
 
+  useEffect(() => {
+    console.log('Current Player Debug:', {
+      currentPlayerToken: gameStatus?.current_player_token,
+      myToken: currentUserToken,
+      isMyTurn: gameStatus?.current_player_token === currentUserToken
+    });
+  }, [gameStatus, currentUserToken]);
+
   return (
     <GameContainer>
       <ChessboardContainer>
@@ -221,7 +229,11 @@ const GamePage = () => {
       </ChessboardContainer>
       
       <SideContainer>
-        <PlayerCard $isCurrentPlayer={gameStatus?.current_player_token === gameStatus?.player1_token}>
+        <PlayerCard $isCurrentPlayer={
+          isCreator ? 
+          (gameStatus?.current_player_token === currentUserToken) :
+          (gameStatus?.current_player_token !== currentUserToken)
+        }>
           <PlayerInfo>
             <PlayerAvatar />
             <PlayerName>
@@ -231,7 +243,11 @@ const GamePage = () => {
           {isCreator && <SurrenderButton onClick={handleSurrender}>기권하기</SurrenderButton>}
         </PlayerCard>
         
-        <PlayerCard $isCurrentPlayer={gameStatus?.current_player_token === gameStatus?.player2_token}>
+        <PlayerCard $isCurrentPlayer={
+          !isCreator ? 
+          (gameStatus?.current_player_token === currentUserToken) :
+          (gameStatus?.current_player_token !== currentUserToken)
+        }>
           <PlayerInfo>
             <PlayerAvatar />
             <PlayerName>
