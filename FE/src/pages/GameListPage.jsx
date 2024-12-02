@@ -175,6 +175,10 @@ const GameListPage = () => {
     };
 
     fetchRooms();
+
+    const intervalId = setInterval(fetchRooms, 1000); // 5초마다 방 목록 갱신
+
+    return () => clearInterval(intervalId); // 컴포넌트 언마운트 시 인터벌 정리
   }, []);
 
   if (loading) return <LoadingMessage>로딩 중...</LoadingMessage>;
