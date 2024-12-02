@@ -24,7 +24,7 @@ const GameRoom = () => {
   const [error, setError] = useState(null);
   const [roomName, setRoomName] = useState('');
   const [isCreator, setIsCreator] = useState(false);
-  const [gameStarted, setGameStarted] = useState(false); // 게임 시작 상태 추가
+  const [gameStarted, setGameStarted] = useState(false);
   useEffect(() => {
     const token = localStorage.getItem('userToken');
     if (!token) {
@@ -41,15 +41,18 @@ const GameRoom = () => {
         setRoomName(response.room_name);
         setIsCreator(response.is_creator);
         
+        const creatorName = response.creator_username ? response.creator_username.trim() : '';
+        const joinedName = response.joined_username ? response.joined_username.trim() : '';
+        
         setPlayers([
           {
             username: '방장',
-            playerName: response.creator_username,
+            playerName: creatorName,
             isCreator: true
           },
           ...(response.has_joined_members ? [{
             username: '참가자',
-            playerName: response.joined_username,
+            playerName: joinedName,
             isCreator: false
           }] : [])
         ]);
@@ -108,7 +111,7 @@ const GameRoom = () => {
                   {player.playerName}
                 </span>
               </PlayerName>
-              <PlayerStatus isCreator={player.isCreator}>
+              <PlayerStatus $isCreator={player.isCreator}>
                 {player.isCreator ? '방장' : '준비완료'}
               </PlayerStatus>
             </Player>

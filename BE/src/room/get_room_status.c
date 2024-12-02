@@ -86,7 +86,12 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
             // 방장의 이름 찾기
             char *creator_name_pos = strstr(buffer, "Creator Username: ");
             if (creator_name_pos) {
-                sscanf(creator_name_pos + strlen("Creator Username: "), "%[^,]", creator_username);
+                char *end_pos;
+                sscanf(creator_name_pos + strlen("Creator Username: "), "%[^,\n]", creator_username);
+                // 줄바꿈 문자 제거
+                if ((end_pos = strchr(creator_username, '\n')) != NULL) {
+                    *end_pos = '\0';
+                }
             }
 
             // 참가자의 이름 찾기
@@ -129,7 +134,7 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
              has_joined_members ? "true" : "false",
              game_started ? "true" : "false",
              creator_username,
-             has_joined_members ? joined_username : "");
+             joined_username);
     
     write(client_socket, success_response, strlen(success_response));
 }

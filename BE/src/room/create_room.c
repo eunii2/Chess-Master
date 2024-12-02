@@ -139,8 +139,12 @@ void create_room_handler(int client_socket, cJSON *json_request) {
              "HTTP/1.1 201 Created\r\n"
              "Content-Type: application/json\r\n"
              "%s\r\n"
-             "{\"status\":\"success\",\"message\":\"Room created successfully\",\"room_id\":%d,\"host_token\":\"%s\"}",
-             cors_headers, room_id, token); // 방장의 토큰을 응답에 포함
+             "{\"status\":\"success\","
+             "\"message\":\"Room created successfully\","
+             "\"room_id\":%d,"
+             "\"host_token\":\"%s\","
+             "\"creator_username\":\"%s\"}",
+             cors_headers, room_id, token, username);
     write(client_socket, success_response, strlen(success_response));
 }
 
