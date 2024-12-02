@@ -27,6 +27,7 @@ import {
   HomeButton,
   RecordButton
 } from '../styles/GamePage.styles';
+import defaultProfileImage from '../assets/default.png';
 
 const GamePage = () => {
   const { roomId } = useParams();
@@ -242,7 +243,10 @@ useEffect(() => {
           (gameStatus?.current_player_token !== currentUserToken)
         }>
           <PlayerInfo>
-            <PlayerAvatar />
+            <PlayerAvatar 
+              src={gameStatus?.player1_profile_image || defaultProfileImage} 
+              alt="Player Avatar"
+            />
             <PlayerName>
               {gameStatus?.player1_username} (White)
             </PlayerName>
@@ -256,7 +260,10 @@ useEffect(() => {
           (gameStatus?.current_player_token !== currentUserToken)
         }>
           <PlayerInfo>
-            <PlayerAvatar />
+            <PlayerAvatar 
+              src={gameStatus?.player2_profile_image || defaultProfileImage}
+              alt="Player Avatar"
+            />
             <PlayerName>
               {gameStatus?.player2_username} (Black)
             </PlayerName>

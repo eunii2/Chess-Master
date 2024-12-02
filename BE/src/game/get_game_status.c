@@ -6,6 +6,7 @@
 #include "config.h"
 #include "game.h"
 #include "utils.h"
+#include "image.h"
 
 // 게임 상태 배열 및 초기화 플래그
 static GameState game_states[10];
@@ -88,11 +89,32 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     char* player1_username = get_user_name_by_token(game_state->player1_token);
     char* player2_username = get_user_name_by_token(game_state->player2_token);
 
-    // 디버깅을 위한 로그 출력
-    printf("Player 1 Token: %s\n", game_state->player1_token);
-    printf("Player 2 Token: %s\n", game_state->player2_token);
-    printf("Player 1 Username: %s\n", player1_username);
-    printf("Player 2 Username: %s\n", player2_username);
+    // 토큰으로 유저 ID 조회
+    int player1_id = get_user_id_by_token(game_state->player1_token);
+    int player2_id = get_user_id_by_token(game_state->player2_token);
+
+    // 프로필 이미지 URL 조회
+    UserList user_list = {NULL, 0, 0};
+    load_user_list(&user_list);
+
+    const char *player1_image = NULL;
+    const char *player2_image = NULL;
+
+    // player1의 이미지 찾기
+    for (size_t i = 0; i < user_list.size; i++) {
+        if (user_list.entries[i].user_id == player1_id) {
+            player1_image = user_list.entries[i].image_address;
+            break;
+        }
+    }
+
+    // player2의 이미지 찾기
+    for (size_t i = 0; i < user_list.size; i++) {
+        if (user_list.entries[i].user_id == player2_id) {
+            player2_image = user_list.entries[i].image_address;
+            break;
+        }
+    }
 
     // JSON 응답 생성
     cJSON *response_json = cJSON_CreateObject();
@@ -129,6 +151,12 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     }
     cJSON_AddItemToObject(response_json, "board", board_array);
 
+    // 프로필 이미지 URL 추가
+    cJSON_AddStringToObject(response_json, "player1_profile_image", 
+                           player1_image ? player1_image : "");
+    cJSON_AddStringToObject(response_json, "player2_profile_image", 
+                           player2_image ? player2_image : "");
+
     // JSON 응답 전송
     char *json_str = cJSON_Print(response_json);
     char response[4096];
@@ -143,6 +171,7 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     write(client_socket, response, strlen(response));
 
     // 메모리 해제
+    free_user_list(&user_list);
     free(json_str);
     cJSON_Delete(response_json);
 }
