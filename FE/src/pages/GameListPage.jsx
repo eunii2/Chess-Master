@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import historyIcon from '../assets/history_button.png';
 import {
   PageContainer,
   NavBar,
@@ -30,7 +31,14 @@ import {
   UploadInput,
   UploadImage,
   ProfileContainer,
-  RoomProfileImage
+  RoomProfileImage,
+  HistoryButton,
+  HistoryIcon,
+  HistoryPopup,
+  HistoryList,
+  HistoryItem,
+  HistoryTitle,
+  HistoryDate
 } from '../styles/GameListPage.styles';
 import { gameService } from '../services/gameService';
 import { authService } from '../services/authService';
@@ -39,6 +47,8 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import defaultProfileImage from '../assets/default.png';
 
 const GameListPage = () => {
+  console.log('GameListPage 컴포넌트 렌더링 시작');
+  
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +59,8 @@ const GameListPage = () => {
   const [profileImage, setProfileImage] = useState('');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null); 
+  const [showHistory, setShowHistory] = useState(false);
+  const [gameHistory, setGameHistory] = useState([]);
 
   const bucketName = 'fpbusket'; 
   const region = 'ap-northeast-2'; 
@@ -159,6 +171,34 @@ const GameListPage = () => {
     }
   };
 
+  const loadGameHistory = async () => {
+    console.log('loadGameHistory 함수 호출됨');
+    try {
+      const token = localStorage.getItem('userToken');
+      console.log('토큰:', token);
+      
+      // 임시 데이터
+      const mockHistory = [
+        { id: 1, roomName: "즐거운 체스 한 판", date: "2024-03-20", roomId: "123" },
+        { id: 2, roomName: "실력자만", date: "2024-03-19", roomId: "124" },
+      ];
+      console.log('게임 기록 데이터:', mockHistory);
+      setGameHistory(mockHistory);
+    } catch (error) {
+      console.error('게임 기록 불러오기 실패:', error);
+    }
+  };
+
+  const handleHistoryClick = () => {
+    console.log('히스토리 버튼 클릭됨');
+    console.log('현재 showHistory 상태:', showHistory);
+    if (!showHistory) {
+      loadGameHistory();
+    }
+    setShowHistory(!showHistory);
+    console.log('변경된 showHistory 상태:', !showHistory);
+  };
+
   useEffect(() => {
     const fetchRooms = async () => {
       try {
@@ -186,6 +226,7 @@ const GameListPage = () => {
 
   return (
     <PageContainer>
+      {console.log('렌더링: PageContainer 시작')}
       <NavBar>
         <Logo>
           ♟️ <LogoText>Chess Master</LogoText>
@@ -232,6 +273,32 @@ const GameListPage = () => {
           })}
         </RoomGrid>
       </Content>
+
+      {console.log('히스토리 버튼 렌더링 시도')}
+      <HistoryButton onClick={handleHistoryClick}>
+        <HistoryIcon src={historyIcon} alt="History" />
+      </HistoryButton>
+
+      {console.log('showHistory 상태:', showHistory)}
+      {showHistory && (
+        <HistoryPopup>
+          {console.log('HistoryPopup 렌더링')}
+          <HistoryList>
+            {gameHistory.map((game) => {
+              console.log('게임 기록 항목 렌더링:', game);
+              return (
+                <HistoryItem 
+                  key={game.id}
+                  onClick
+                >
+                  <HistoryTitle>{game.roomName}</HistoryTitle>
+                  <HistoryDate>{game.date}</HistoryDate>
+                </HistoryItem>
+              );
+            })}
+          </HistoryList>
+        </HistoryPopup>
+      )}
 
       {isModalOpen && (
         <Modal>

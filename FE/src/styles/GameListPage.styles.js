@@ -331,3 +331,154 @@ export const UploadImage = styled.img`
   max-height: 300px;
   object-fit: contain;
 `;
+
+export const HistoryButton = styled.button`
+  position: fixed;
+  bottom: 5rem;
+  right: 5rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #4e80ee 0%, #3b5998 100%);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  
+  outline: none;
+  &:focus {
+    outline: none;
+  }
+  /* 페이드인 + 슬라이드 애니메이션 추가 */
+  animation: slideIn 0.5s ease-out;
+  
+  @keyframes slideIn {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 호버 효과는 별도로 관리 */
+  transition: transform 0.2s, box-shadow 0.2s;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  }
+`;
+
+export const HistoryIcon = styled.img`
+  width: 30px;
+  height: 30px;
+  filter: brightness(0) invert(1); // PNG 아이콘을 흰색으로 변경
+`;
+
+export const HistoryPopup = styled.div`
+  position: fixed;
+  bottom: 10.2rem;
+  right: 5rem;
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  min-width: 300px;
+  max-width: 400px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  z-index: 1000;
+  
+  /* 페이드인 애니메이션 추가 */
+  animation: fadeIn 0.3s ease-out;
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 기존의 스크롤바 스타일 유지 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &:hover {
+    &::-webkit-scrollbar {
+      display: block;
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    right: 25px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid white;
+  }
+`;
+
+export const HistoryList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+`;
+
+export const HistoryItem = styled.div`
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+
+  &:hover {
+    background: #eef1f5;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+`;
+
+export const HistoryTitle = styled.h3`
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: #1e293b;
+  font-weight: 600;
+`;
+
+export const HistoryDate = styled.p`
+  margin: 0;
+  font-size: 0.875rem;
+  color: #64748b;
+`;
