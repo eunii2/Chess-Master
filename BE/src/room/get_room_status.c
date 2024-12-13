@@ -3,6 +3,7 @@
 #include "config.h"
 #include "game.h"
 
+// 방 상태 조회 API 핸들러
 void get_room_status_handler(int client_socket, cJSON *json_request) {
     const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
     const cJSON *room_id_json = cJSON_GetObjectItemCaseSensitive(json_request, "room_id");
@@ -19,6 +20,7 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 토큰과 방 ID 추출
     const char *token = token_json->valuestring;
     int room_id = room_id_json->valueint;
     GameState *game_state = get_game_state(room_id);
@@ -75,6 +77,7 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
     char creator_username[100] = "";
     char joined_username[100] = "";
 
+    // room_list.txt 파일에서 방 정보 찾기
     while (fgets(buffer, sizeof(buffer), file)) {
         int current_room_id, creator_id;
         if (sscanf(buffer, "Room ID: %d, Room Name: %[^,], Created By: %d", &current_room_id, room_name, &creator_id) == 3 && current_room_id == room_id) {
@@ -105,6 +108,7 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
     }
     fclose(file);
 
+    // 방을 찾지 못한 경우 404 응답
     if (!room_found) {
         char error_response[512];
         snprintf(error_response, sizeof(error_response),
@@ -117,6 +121,7 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 방을 찾은 경우 200 응답
     char success_response[1024];
     snprintf(success_response, sizeof(success_response),
              "HTTP/1.1 200 OK\r\n"

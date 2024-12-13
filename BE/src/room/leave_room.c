@@ -2,6 +2,7 @@
 #include "utils.h"
 #include "config.h"
 
+// 방 나가기 API 핸들러
 void leave_room_handler(int client_socket, cJSON *json_request) {
     const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
     const cJSON *room_id_json = cJSON_GetObjectItemCaseSensitive(json_request, "room_id");
@@ -17,6 +18,7 @@ void leave_room_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 토큰과 방 ID 추출
     const char *token = token_json->valuestring;
     int room_id = room_id_json->valueint;
 
@@ -33,6 +35,7 @@ void leave_room_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 방 리스트 파일 열기
     FILE *file = fopen(ROOM_LIST_FILE, "r");
     if (!file) {
         perror("fopen error");
@@ -54,6 +57,7 @@ void leave_room_handler(int client_socket, cJSON *json_request) {
     int user_is_creator = 0;
     int user_joined = 0;
 
+    // 파일에서 방 정보 읽기
     while (fgets(buffer, sizeof(buffer), file)) {
         lines[line_count] = strdup(buffer);
         if (!lines[line_count]) {
@@ -99,6 +103,7 @@ void leave_room_handler(int client_socket, cJSON *json_request) {
     }
     fclose(file);
 
+    // 방을 찾지 못한 경우 404 응답
     if (!room_found) {
         char error_response[512];
         snprintf(error_response, sizeof(error_response),
@@ -114,6 +119,7 @@ void leave_room_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 방에 참가하지 않은 사용자가 방을 나가려고 하는 경우 409 응답
     if (!user_joined && !user_is_creator) {
         char error_response[512];
         snprintf(error_response, sizeof(error_response),
@@ -129,6 +135,7 @@ void leave_room_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 방 정보를 수정한 후 파일에 씀
     file = fopen(ROOM_LIST_FILE, "w");
     if (!file) {
         perror("fopen error");

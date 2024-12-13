@@ -3,10 +3,12 @@
 #include "config.h"
 #include "game.h"
 
+// 방 생성 API 핸들러
 void create_room_handler(int client_socket, cJSON *json_request) {
     const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
     const cJSON *room_name_json = cJSON_GetObjectItemCaseSensitive(json_request, "room_name");
 
+    // JSON 유효성 검사
     if (!cJSON_IsString(token_json) || !cJSON_IsString(room_name_json)) {
         char error_response[512];
         snprintf(error_response, sizeof(error_response),
@@ -83,6 +85,7 @@ void create_room_handler(int client_socket, cJSON *json_request) {
         }
     }
 
+    // 사용자가 이미 방을 만들었는지 확인
     char buffer[512];
     int room_exists = 0;
     while (fgets(buffer, sizeof(buffer), file)) {
@@ -96,6 +99,7 @@ void create_room_handler(int client_socket, cJSON *json_request) {
     }
     fclose(file);
 
+    // 이미 방이 있는 경우 에러 응답
     if (room_exists) {
         char error_response[512];
         snprintf(error_response, sizeof(error_response),
@@ -111,6 +115,7 @@ void create_room_handler(int client_socket, cJSON *json_request) {
     static int last_room_id = 0;
     int room_id = ++last_room_id;
 
+    // 방 생성
     GameState *game_state = get_game_state(room_id);
     if (game_state) {
         strncpy(game_state->player1_token, token, TOKEN_LENGTH);

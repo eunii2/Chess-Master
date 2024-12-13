@@ -6,7 +6,7 @@
 #include "admin.h"
 #include<stdlib.h>
 
-
+// 서버 정보를 문자열로 포맷하여 반환하는 함수
 char *get_server_info() {
     struct utsname sys_info;
     char *info_buffer = calloc(1024, sizeof(char));
@@ -16,7 +16,7 @@ char *get_server_info() {
     }
 
     if (uname(&sys_info) == 0) {
-        // 서버 정보를 문자열로 포맷하여 info_buffer에 저장
+        // 시스템 정보를 포맷하여 info_buffer에 저장
         snprintf(info_buffer, 1024,
                  "\n========== 서버 정보 ==========\n"
                  "시스템 이름: %s\n"

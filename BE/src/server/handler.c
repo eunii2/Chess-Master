@@ -8,6 +8,7 @@
 #include "image.h"
 #include "chat.h"
 
+// 각 요청에 대한 핸들러 함수
 void handle_request(int client_socket, const char *method, const char *path, cJSON *json_request) {
 
     // CORS 헤더 추가
@@ -59,24 +60,31 @@ void handle_request(int client_socket, const char *method, const char *path, cJS
     else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/start_game") == 0) {
         start_game_handler(client_socket, json_request);
     }
+    // 게임 상태 조회 API 핸들러
     else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/get_game_status") == 0) {
         get_game_status_handler(client_socket, json_request);
     }
+    // 말 이동 API 핸들러
     else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/move_piece") == 0) {
         move_piece_handler(client_socket, json_request);
     }
+    // 게임 포기 API 핸들러
     else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/forfeit") == 0) {
         forfeit_game_handler(client_socket, json_request);
     }
+    // 채팅 메시지 전송 API 핸들러
     else if (strcmp(method, "POST") == 0 && strcmp(path, "/chat/send_message") == 0) {
         send_message_handler(client_socket, json_request);
     }
+    // 채팅 메시지 조회 API 핸들러
     else if (strcmp(method, "POST") == 0 && strcmp(path, "/chat/get_messages") == 0) {
         get_messages_handler(client_socket, json_request);
     }
+    // 게임 기록 조회 API 핸들러
     else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/get_history") == 0) {
         get_game_history_handler(client_socket, json_request);
     }
+    // 유저 게임 기록 조회 API 핸들러
     else if (strcmp(method, "POST") == 0 && strcmp(path, "/game/user_history") == 0) {
         get_user_game_history_handler(client_socket, json_request);
     }

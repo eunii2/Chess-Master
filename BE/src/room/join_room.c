@@ -3,6 +3,7 @@
 #include "config.h"
 #include "game.h"
 
+// 방 참여 API 핸들러
 void join_room_handler(int client_socket, cJSON *json_request) {
     const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
     const cJSON *room_id_json = cJSON_GetObjectItemCaseSensitive(json_request, "room_id");
@@ -19,6 +20,7 @@ void join_room_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 토큰과 방 ID 추출
     const char *token = token_json->valuestring;
     int room_id = room_id_json->valueint;
 
@@ -55,6 +57,7 @@ void join_room_handler(int client_socket, cJSON *json_request) {
     char *lines[1024];
     int line_count = 0;
 
+    // 파일에서 방 정보 읽기
     while (fgets(buffer, sizeof(buffer), file)) {
         size_t len = strlen(buffer);
         if (len > 0 && buffer[len - 1] == '\n') {
@@ -118,6 +121,7 @@ void join_room_handler(int client_socket, cJSON *json_request) {
     }
     fclose(file);
 
+    // 방을 찾지 못한 경우 404 응답
     if (!room_found) {
         char error_response[512];
         snprintf(error_response, sizeof(error_response),
@@ -133,6 +137,7 @@ void join_room_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 파일을 쓰기 모드로 열어서 기존 내용을 지우고 새로 씀
     file = fopen(ROOM_LIST_FILE, "w");
     if (!file) {
         perror("fopen error");
