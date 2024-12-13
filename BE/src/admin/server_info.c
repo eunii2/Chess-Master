@@ -3,8 +3,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include "admin.h"
-#include<stdlib.h>
+#include <stdlib.h>
+#include <sys/wait.h>
 
 // 서버 정보를 문자열로 포맷하여 반환하는 함수
 char *get_server_info() {
@@ -16,7 +16,6 @@ char *get_server_info() {
     }
 
     if (uname(&sys_info) == 0) {
-        // 시스템 정보를 포맷하여 info_buffer에 저장
         snprintf(info_buffer, 1024,
                  "\n========== 서버 정보 ==========\n"
                  "시스템 이름: %s\n"
@@ -31,5 +30,38 @@ char *get_server_info() {
     } else {
         snprintf(info_buffer, 1024, "Error getting system information: %s\n", strerror(errno));
     }
-    return info_buffer;  // 포맷된 문자열 반환
+    return info_buffer;
 }
+
+void fork_and_print_server_info() {
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        perror("fork failed");
+        exit(EXIT_FAILURE);
+    } else if (pid == 0) {
+        char *info = get_server_info();
+        if (info) {
+            printf("%s", info);
+            free(info);
+        }
+        exit(EXIT_SUCCESS);
+    } else {
+        int status;
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status)) {
+            printf("Child process exited with status %d\n", WEXITSTATUS(status));
+        } else {
+            printf("Child process did not exit normally\n");
+        }
+    }
+}
+
+#ifdef TEST_SERVER_INFO
+int main() {
+    printf("Forking to fetch server info...\n");
+    fork_and_print_server_info();
+    printf("Back in the main process.\n");
+    return 0;
+}
+#endif
