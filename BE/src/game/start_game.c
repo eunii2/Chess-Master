@@ -11,9 +11,10 @@
 // 체스판 데이터
 char chessboard[8][8];
 
-// 가정: 토큰으로부터 사용자 이름을 가져오는 함수
+// 토큰으로부터 사용자 이름을 가져오는 함수
 const char* get_username_from_token(const char* token);
 
+// 방 ID에 따라 게임 스레드를 생성하는 함수
 void start_game_in_room(int room_id) {
     pthread_t thread;
     int* args = malloc(2 * sizeof(int));
@@ -24,6 +25,7 @@ void start_game_in_room(int room_id) {
     args[0] = room_id;
     args[1] = 0;
 
+    // 게임 스레드 생성
     if (pthread_create(&thread, NULL, game_thread, args) != 0) {
         perror("pthread_create failed");
         free(args);
@@ -35,6 +37,7 @@ void start_game_in_room(int room_id) {
     printf("Game thread for room %d started\n", room_id);
 }
 
+// 체스판의 초기 상태를 설정하는 함수
 void setup_initial_board(char board[8][8]) {
     const char initial_board[8][8] = {
             {'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
@@ -49,15 +52,17 @@ void setup_initial_board(char board[8][8]) {
     memcpy(board, initial_board, sizeof(initial_board));
 }
 
+// 게임 시작 요청을 처리하는 함수
 void start_game_handler(int client_socket, cJSON *json_request) {
+    // JSON 요청에서 방 ID와 토큰을 추출
     const cJSON *room_id_json = cJSON_GetObjectItemCaseSensitive(json_request, "room_id");
     const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
 
-    // 디버그 로그 추가
     printf("Received start game request - room_id: %s, token: %s\n",
            cJSON_Print(room_id_json),
            cJSON_GetStringValue(token_json));
 
+    // JSON 유효성 검증
     if (!cJSON_IsNumber(room_id_json) || !cJSON_IsString(token_json)) {
         const char *response =
                 "HTTP/1.1 400 Bad Request\r\n"
@@ -78,7 +83,6 @@ void start_game_handler(int client_socket, cJSON *json_request) {
     // 게임 상태 업데이트
     GameState *game_state = get_game_state(room_id);
 
-    // 게임 상태 디버그 로그
     if (game_state) {
         printf("Game state found - player1_token: %s, player2_token: %s\n",
                game_state->player1_token,
@@ -99,12 +103,11 @@ void start_game_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
-    // 토큰 비교 전에 로그 추가
-    printf("Comparing tokens - Player1: '%s', Received: '%s'\n", 
+    printf("Comparing tokens - Player1: '%s', Received: '%s'\n",
            game_state->player1_token, 
            token);
 
-    // 토큰이 방장의 토큰인지 확인
+    // 방장 토큰 확인
     if (strcmp(game_state->player1_token, token) != 0) {
         const char *response =
                 "HTTP/1.1 403 Forbidden\r\n"
@@ -118,9 +121,9 @@ void start_game_handler(int client_socket, cJSON *json_request) {
     }
 
     // 게임 시작 상태 업데이트
-    game_state->game_started = 1;  // 게임 시작 상태 설정
+    game_state->game_started = 1;
 
-    // 성공 응답 JSON 먼저 생성
+    // 응답 JSON 생성
     cJSON *response_json = cJSON_CreateObject();
     cJSON_AddStringToObject(response_json, "status", "success");
     cJSON_AddStringToObject(response_json, "message", "Game started");
@@ -129,7 +132,6 @@ void start_game_handler(int client_socket, cJSON *json_request) {
     char *json_str = cJSON_Print(response_json);
     int json_len = strlen(json_str);
 
-    // HTTP 응답 헤더와 본문 조합
     char response_buffer[1024];
     int response_len = snprintf(response_buffer, sizeof(response_buffer),
         "HTTP/1.1 200 OK\r\n"
@@ -141,16 +143,14 @@ void start_game_handler(int client_socket, cJSON *json_request) {
         "\r\n"
         "%s", json_len, json_str);
 
-    // 응답 전송
     write(client_socket, response_buffer, response_len);
     
-    // 메모리 해제
     cJSON_Delete(response_json);
     free(json_str);
 
-    printf("Response sent: %s\n", response_buffer);  // 디버깅용 로그
+    printf("Response sent: %s\n", response_buffer);
 
-    // **두 명의 플레이어가 참가했는지 확인**
+    // 두 명의 플레이어가 참가했는지 확인
     if (strlen(game_state->player1_token) == 0 || strlen(game_state->player2_token) == 0) {
         const char *response =
                 "HTTP/1.1 400 Bad Request\r\n"
@@ -212,14 +212,13 @@ void start_game_handler(int client_socket, cJSON *json_request) {
     if (history) fclose(history);
     if (chat) fclose(chat);
 
-    // **디버깅 메시지 추가**
     printf("Debug: Starting game in room %d. Host token: %s\n", room_id, game_state->player1_token);
 
     // 방장이 선공하도록 설정
     strncpy(game_state->current_player_token, game_state->player1_token, TOKEN_LENGTH);
     game_state->current_player_token[TOKEN_LENGTH] = '\0';
 
-    // Room List에서 방 제거 로직 추가
+    // 시작된 게임은 Room List에서 방 제거 로직
     FILE *file = fopen(ROOM_LIST_FILE, "r");
     if (!file) {
         const char *response =
@@ -257,7 +256,6 @@ void start_game_handler(int client_socket, cJSON *json_request) {
     fclose(file);
     fclose(temp_file);
 
-    // 원본 파일을 업데이트
     if (remove(ROOM_LIST_FILE) != 0) {
         perror("Error removing room_list.txt");
     }

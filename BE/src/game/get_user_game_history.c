@@ -8,7 +8,9 @@
 #include "game.h"
 #include "utils.h"
 
+// 특정 사용자의 게임 히스토리를 반환하는 함수
 void get_user_game_history_handler(int client_socket, cJSON *json_request) {
+    // 요청에서 사용자 토큰 추출
     const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
     if (!cJSON_IsString(token_json)) {
         const char *error_response = "HTTP/1.1 400 Bad Request\r\n"
@@ -17,7 +19,7 @@ void get_user_game_history_handler(int client_socket, cJSON *json_request) {
         write(client_socket, error_response, strlen(error_response));
         return;
     }
-
+    // 사용자 이름 확인
     const char* user_token = token_json->valuestring;
     const char* username = get_user_name_by_token(user_token);
     if (!username) {
@@ -27,7 +29,7 @@ void get_user_game_history_handler(int client_socket, cJSON *json_request) {
         write(client_socket, error_response, strlen(error_response));
         return;
     }
-    
+    // 게임 디렉토리 접근
     DIR *dir;
     struct dirent *entry;
     cJSON *games_array = cJSON_CreateArray();
@@ -40,7 +42,7 @@ void get_user_game_history_handler(int client_socket, cJSON *json_request) {
         write(client_socket, error_response, strlen(error_response));
         return;
     }
-
+    // 디렉토리 내의 각 게임 방 탐색
     while ((entry = readdir(dir)) != NULL) {
         if (entry->d_type == DT_DIR && strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
             char info_path[256];
@@ -66,11 +68,13 @@ void get_user_game_history_handler(int client_socket, cJSON *json_request) {
                     }
                 }
 
+                // 사용자의 게임인 경우 응답 데이터에 추가
                 if (is_user_game) {
                     cJSON *game_obj = cJSON_CreateObject();
                     cJSON_AddStringToObject(game_obj, "roomId", entry->d_name);
                     cJSON_AddStringToObject(game_obj, "roomName", room_name);
 
+                    // 히스토리 파일의 마지막 수정 시간 확인
                     char history_path[256];
                     snprintf(history_path, sizeof(history_path), "../data/game/%s/history.txt", entry->d_name);
                     struct stat st;
@@ -89,6 +93,7 @@ void get_user_game_history_handler(int client_socket, cJSON *json_request) {
     }
     closedir(dir);
 
+    // JSON 응답 생성 및 클라이언트로 전송
     cJSON *response = cJSON_CreateObject();
     cJSON_AddStringToObject(response, "status", "success");
     cJSON_AddItemToObject(response, "games", games_array);

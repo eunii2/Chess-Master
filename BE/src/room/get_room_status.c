@@ -5,7 +5,7 @@
 
 // 방 상태 조회 API 핸들러
 void get_room_status_handler(int client_socket, cJSON *json_request) {
-    pid_t pid = getpid(); // 현재 프로세스 ID
+    pid_t pid = getpid();
     printf("Process %d: Received /room/status request\n", pid);
 
     const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");

@@ -12,10 +12,10 @@
 static GameState game_states[10];
 static int initialized = 0;
 
-// 새로운 GameState 생성 함수
+// 특정 방의 게임 상태를 초기화하고 저장. 체스판 상태와 기본값을 설정
 GameState* create_game_state(int room_id) {
     for (int i = 0; i < 10; i++) {
-        if (game_states[i].room_id == 0) { // 빈 슬롯 찾기
+        if (game_states[i].room_id == 0) {
             GameState* game_state = &game_states[i];
             game_state->room_id = room_id;
 
@@ -30,18 +30,18 @@ GameState* create_game_state(int room_id) {
             memset(game_state->player1_token, 0, sizeof(game_state->player1_token));
             memset(game_state->player2_token, 0, sizeof(game_state->player2_token));
             memset(game_state->current_player_token, 0, sizeof(game_state->current_player_token));
-            game_state->game_over = 0;       // 초기 상태: 게임 진행 중
+            game_state->game_over = 0;
             return game_state;
         }
     }
 
-    return NULL; // 빈 슬롯이 없으면 NULL 반환
+    return NULL;
 }
 
-// 특정 방의 게임 상태를 반환
+// 요청된 방의 게임 상태를 반환하거나 새로운 상태를 생성
 GameState* get_game_state(int room_id) {
     if (!initialized) {
-        memset(game_states, 0, sizeof(game_states)); // 초기화
+        memset(game_states, 0, sizeof(game_states));
         initialized = 1;
     }
 
@@ -50,7 +50,6 @@ GameState* get_game_state(int room_id) {
             return &game_states[i];
         }
     }
-    // 방 ID가 존재하지 않으면 새로운 GameState 생성
     return create_game_state(room_id);
 }
 
@@ -59,6 +58,7 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     const cJSON *room_id_json = cJSON_GetObjectItemCaseSensitive(json_request, "room_id");
 
     if (!cJSON_IsNumber(room_id_json)) {
+        // 유효하지 않은 방 ID 요청 처리
         const char *response =
                 "HTTP/1.1 400 Bad Request\r\n"
                 "Access-Control-Allow-Origin: http://localhost:5173\r\n"
@@ -74,6 +74,7 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     GameState* game_state = get_game_state(room_id);
 
     if (!game_state) {
+        // 요청된 방 ID가 존재하지 않을 경우
         const char *response =
                 "HTTP/1.1 404 Not Found\r\n"
                 "Access-Control-Allow-Origin: http://localhost:5173\r\n"
@@ -107,7 +108,6 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
             break;
         }
     }
-
     // player2의 이미지 찾기
     for (size_t i = 0; i < user_list.size; i++) {
         if (user_list.entries[i].user_id == player2_id) {
@@ -121,7 +121,6 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     cJSON_AddStringToObject(response_json, "status", "success");
     cJSON_AddNumberToObject(response_json, "room_id", game_state->room_id);
     cJSON_AddStringToObject(response_json, "current_player_token", game_state->current_player_token);
-    // 사용자 토큰 추가
     cJSON_AddStringToObject(response_json, "player1_token", game_state->player1_token);
     cJSON_AddStringToObject(response_json, "player2_token", game_state->player2_token);
     cJSON_AddStringToObject(response_json, "player1_username",
@@ -144,9 +143,9 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
     // 체스판 상태를 JSON 배열로 추가
     cJSON *board_array = cJSON_CreateArray();
     for (int i = 0; i < 8; i++) {
-        char row[9]; // 각 행은 최대 8개의 문자 + NULL
+        char row[9];
         strncpy(row, game_state->board[i], 8);
-        row[8] = '\0'; // 문자열 종료
+        row[8] = '\0';
         cJSON_AddItemToArray(board_array, cJSON_CreateString(row));
     }
     cJSON_AddItemToObject(response_json, "board", board_array);
@@ -170,7 +169,6 @@ void get_game_status_handler(int client_socket, cJSON *json_request) {
 
     write(client_socket, response, strlen(response));
 
-    // 메모리 해제
     free_user_list(&user_list);
     free(json_str);
     cJSON_Delete(response_json);

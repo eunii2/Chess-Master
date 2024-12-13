@@ -33,8 +33,9 @@ char *get_server_info() {
     return info_buffer;
 }
 
+// 서버 정보를 가져와 출력하는 함수
 void fork_and_print_server_info() {
-    pid_t pid = fork();
+    pid_t pid = fork();  // 프로세스를 분기하여 자식 프로세스 생성
 
     if (pid < 0) {
         perror("fork failed");
@@ -60,7 +61,9 @@ void fork_and_print_server_info() {
 #ifdef TEST_SERVER_INFO
 int main() {
     printf("Forking to fetch server info...\n");
+    // 서버 정보를 가져오는 함수 호출
     fork_and_print_server_info();
+    // 부모 프로세스에서 출력
     printf("Back in the main process.\n");
     return 0;
 }

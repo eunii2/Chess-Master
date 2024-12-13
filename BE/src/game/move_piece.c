@@ -9,6 +9,7 @@
 #include "cJSON.h"
 #include "utils.h"
 
+// 현재 체스판 상태 출력
 void print_board() {
     printf("Current Chessboard:\n");
     for (int row = 0; row < 8; row++) {
@@ -22,6 +23,7 @@ void print_board() {
 // 게임 종료 여부
 bool is_game_over = false;
 
+// 킹이 잡혔는지 확인하는 함수
 bool is_king_captured(char chessboard[8][8]) {
     bool white_king_exists = false;
     bool black_king_exists = false;
@@ -33,7 +35,7 @@ bool is_king_captured(char chessboard[8][8]) {
         }
     }
 
-    // 두 킹 중 하나가 없으면 true 반환
+    // 두 킹 중 하나가 없으면 게임 종료
     return !(white_king_exists && black_king_exists);
 }
 
@@ -45,12 +47,12 @@ bool is_valid_queen_move(int from_row, int from_col, int to_row, int to_col, cha
 
 // 룩 이동 규칙 (직선)
 bool is_valid_rook_move(int from_row, int from_col, int to_row, int to_col, char chessboard[8][8]) {
-    if (from_row == to_row) { // 가로 이동
+    if (from_row == to_row) {
         for (int col = (from_col < to_col ? from_col + 1 : from_col - 1); col != to_col; col += (from_col < to_col ? 1 : -1)) {
             if (chessboard[from_row][col] != ' ') return false;
         }
         return true;
-    } else if (from_col == to_col) { // 세로 이동
+    } else if (from_col == to_col) {
         for (int row = (from_row < to_row ? from_row + 1 : from_row - 1); row != to_row; row += (from_row < to_row ? 1 : -1)) {
             if (chessboard[row][from_col] != ' ') return false;
         }
@@ -59,8 +61,8 @@ bool is_valid_rook_move(int from_row, int from_col, int to_row, int to_col, char
     return false;
 }
 
+// 비숍 이동 규칙 (대각선)
 bool is_valid_bishop_move(int from_row, int from_col, int to_row, int to_col, char piece, char chessboard[8][8]) {
-    // 대각선 이동 확인
     if (abs(from_row - to_row) != abs(from_col - to_col)) {
         printf("Debug: Not a diagonal move\n");
         return false;
@@ -97,6 +99,7 @@ bool is_valid_bishop_move(int from_row, int from_col, int to_row, int to_col, ch
     printf("Debug: Valid bishop move from (%d, %d) to (%d, %d)\n", from_row, from_col, to_row, to_col);
     return true;
 }
+
 // 나이트 이동 규칙 (L자 이동)
 bool is_valid_knight_move(int from_row, int from_col, int to_row, int to_col) {
     int row_diff = abs(from_row - to_row);
@@ -130,12 +133,12 @@ bool is_valid_pawn_move(int from_row, int from_col, int to_row, int to_col, char
         }
     }
 
-    // **대각선 공격** 추가됨
+    // 대각선 공격
     if (abs(from_col - to_col) == 1 && to_row - from_row == direction) {
         char target = chessboard[to_row][to_col];
         if (target != ' ' &&
-            ((piece == 'P' && target >= 'a' && target <= 'z') || // 백폰이 흑말 공격
-             (piece == 'p' && target >= 'A' && target <= 'Z'))) { // 흑폰이 백말 공격
+            ((piece == 'P' && target >= 'a' && target <= 'z') ||
+             (piece == 'p' && target >= 'A' && target <= 'Z'))) {
             printf("Debug: Valid diagonal attack move. Capturing '%c'.\n", target);
             return true;
         }
@@ -146,12 +149,11 @@ bool is_valid_pawn_move(int from_row, int from_col, int to_row, int to_col, char
 }
 
 
-// 이동 유효성 확인 함수
+// 기물 이동의 유효성을 확인하는 함수
 bool is_valid_move(int from_row, int from_col, int to_row, int to_col, char piece, char chessboard[8][8]) {
     char target_piece = chessboard[to_row][to_col];
     if ((piece >= 'A' && piece <= 'Z' && target_piece >= 'A' && target_piece <= 'Z') ||
         (piece >= 'a' && piece <= 'z' && target_piece >= 'a' && target_piece <= 'z')) {
-        // 디버깅 출력: 이동 정보 출력
         printf("Debug: Checking move for piece '%c' from (%d, %d) to (%d, %d), target: '%c'\n",
                piece, from_row, from_col, to_row, to_col, target_piece);
 
@@ -189,10 +191,11 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 방 ID와 사용자 토큰 가져오기
     int room_id = room_id_json->valueint;
     const char *token = token_json->valuestring;
 
-    // 토큰으로 user_id 가져오기
+    // 사용자 ID를 토큰으로 확인
     int player_id = get_user_id_by_token(token);
     if (player_id == -1) {
         const char *error_response =
@@ -215,7 +218,7 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
-    // **토큰 유효성 확인**
+    // 사용자 토큰 확인 - 게임에 참가한 사용자만 접근 가능
     if (strcmp(game_state->player1_token, token) != 0 && strcmp(game_state->player2_token, token) != 0) {
         const char *error_response =
                 "HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\n\r\n{\"status\":\"error\",\"message\":\"Invalid token\"}";
@@ -223,6 +226,7 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 현재 턴 확인 - 현재 턴인 사용자가 아니라면 에러 반환
     if (strcmp(game_state->current_player_token, token) != 0) {
         printf("Error: It is not the turn for token '%s'. Current turn token is '%s'\n",
                token, game_state->current_player_token);
@@ -247,9 +251,8 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    // 체스판 및 위치 정보 처리
     char (*chessboard)[8] = game_state->board;
-
-    // 체스판 위치 변환
     const char *from_position = from_position_json->valuestring;
     const char *to_position = to_position_json->valuestring;
 
@@ -261,7 +264,7 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
     char piece = chessboard[from_row][from_col];
     printf("Attempting to move piece '%c' from %s to %s\n", piece, from_position, to_position);
 
-    // 플레이어와 기물 색상 체크 추가
+    // 플레이어가 자신의 기물을 움직이고 있는지 확인
     bool is_player1 = (strcmp(game_state->player1_token, token) == 0);
     bool is_white_piece = isupper(piece);
 
@@ -275,7 +278,7 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
-    // 유효하지 않은 소스 확인
+    // 이동하려는 위치가 비어있는지 확인
     if (piece == ' ') {
         printf("Error: No piece at the source position (%s)\n", from_position);
         const char *error_response =
@@ -313,7 +316,7 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
     // 현재 플레이어의 사용자 이름 가져오기
     char *player_name = get_user_name_by_token(token);
 
-    // **history.txt에 기록 추가**
+    // 이동 기록 추가 (history.txt)
     char history_file[256];
     snprintf(history_file, sizeof(history_file), GAME_HISTORY, room_id);
 
@@ -336,11 +339,8 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
     // 킹이 잡혔는지 확인
     if (is_king_captured(chessboard)) {
         game_state->game_over = 1;
-
-        // 승자의 토큰 설정 (현재 플레이어가 승자)
         strncpy(game_state->winner_token, game_state->current_player_token, TOKEN_LENGTH);
 
-        // 승자 확인
         char *winner = NULL;
         if (strcmp(game_state->current_player_token, game_state->player1_token) == 0) {
             winner = get_user_name_by_token(game_state->player1_token);
@@ -348,7 +348,6 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
             winner = get_user_name_by_token(game_state->player2_token);
         }
 
-        // 승자 기록을 history.txt에 추가
         char game_log_path[256];
         snprintf(game_log_path, sizeof(game_log_path), GAME_HISTORY, room_id);
         FILE *log_file = fopen(game_log_path, "a");
@@ -357,7 +356,7 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
             fclose(log_file);
         }
 
-        // 클라이언트에 승자 정보 포함한 응답 반환
+        // 게임 종료 응답 반환
         char response[512];
         snprintf(response, sizeof(response),
                  "HTTP/1.1 200 OK\r\n"
@@ -375,7 +374,7 @@ void move_piece_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
-    // 턴 변경: 현재 플레이어 토큰 전환
+    // 턴 변경
     if (strcmp(game_state->current_player_token, game_state->player1_token) == 0) {
         strncpy(game_state->current_player_token, game_state->player2_token, TOKEN_LENGTH);
     } else {
