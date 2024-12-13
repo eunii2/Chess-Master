@@ -5,10 +5,14 @@
 
 // 방 상태 조회 API 핸들러
 void get_room_status_handler(int client_socket, cJSON *json_request) {
+    pid_t pid = getpid(); // 현재 프로세스 ID
+    printf("Process %d: Received /room/status request\n", pid);
+
     const cJSON *token_json = cJSON_GetObjectItemCaseSensitive(json_request, "token");
     const cJSON *room_id_json = cJSON_GetObjectItemCaseSensitive(json_request, "room_id");
 
     if (!cJSON_IsString(token_json) || !cJSON_IsNumber(room_id_json)) {
+        printf("Process %d: Invalid input\n", pid);
         char error_response[512];
         snprintf(error_response, sizeof(error_response),
                  "HTTP/1.1 400 Bad Request\r\n"
@@ -23,11 +27,14 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
     // 토큰과 방 ID 추출
     const char *token = token_json->valuestring;
     int room_id = room_id_json->valueint;
+    printf("Process %d: Checking room status for room_id=%d, token=%s\n", pid, room_id, token);
+
     GameState *game_state = get_game_state(room_id);
     int game_started = (game_state != NULL && game_state->game_started);
 
     int user_id = get_user_id_by_token(token);
     if (user_id == -1) {
+        printf("Process %d: Invalid token for user\n", pid);
         char error_response[512];
         snprintf(error_response, sizeof(error_response),
                  "HTTP/1.1 401 Unauthorized\r\n"
@@ -42,6 +49,7 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
     // 게임이 시작된 경우
     if (game_started) {
         int is_creator = (strcmp(game_state->player1_token, token) == 0);
+        printf("Process %d: Game started for room_id=%d\n", pid, room_id);
         char success_response[512];
         snprintf(success_response, sizeof(success_response),
                  "HTTP/1.1 200 OK\r\n"
@@ -58,6 +66,7 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
     FILE *file = fopen(ROOM_LIST_FILE, "r");
     if (!file) {
         perror("fopen error");
+        printf("Process %d: Failed to open room list file\n", pid);
         char error_response[512];
         snprintf(error_response, sizeof(error_response),
                  "HTTP/1.1 500 Internal Server Error\r\n"
@@ -69,6 +78,7 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
         return;
     }
 
+    printf("Process %d: Searching for room_id=%d in room list file\n", pid, room_id);
     char buffer[512];
     int room_found = 0;
     int is_creator = 0;
@@ -85,19 +95,10 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
             if (creator_id == user_id) {
                 is_creator = 1;
             }
-
-            // 방장의 이름 찾기
             char *creator_name_pos = strstr(buffer, "Creator Username: ");
             if (creator_name_pos) {
-                char *end_pos;
                 sscanf(creator_name_pos + strlen("Creator Username: "), "%[^,\n]", creator_username);
-                // 줄바꿈 문자 제거
-                if ((end_pos = strchr(creator_username, '\n')) != NULL) {
-                    *end_pos = '\0';
-                }
             }
-
-            // 참가자의 이름 찾기
             char *joined_name_pos = strstr(buffer, "joined_username: ");
             if (joined_name_pos) {
                 has_joined_members = 1;
@@ -110,6 +111,7 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
 
     // 방을 찾지 못한 경우 404 응답
     if (!room_found) {
+        printf("Process %d: Room not found for room_id=%d\n", pid, room_id);
         char error_response[512];
         snprintf(error_response, sizeof(error_response),
                  "HTTP/1.1 404 Not Found\r\n"
@@ -122,6 +124,7 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
     }
 
     // 방을 찾은 경우 200 응답
+    printf("Process %d: Room found. Sending success response.\n", pid);
     char success_response[1024];
     snprintf(success_response, sizeof(success_response),
              "HTTP/1.1 200 OK\r\n"
@@ -140,6 +143,6 @@ void get_room_status_handler(int client_socket, cJSON *json_request) {
              game_started ? "true" : "false",
              creator_username,
              joined_username);
-    
+
     write(client_socket, success_response, strlen(success_response));
 }

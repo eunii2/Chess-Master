@@ -20,26 +20,25 @@ void* game_thread(void* arg) {
         return NULL;
     }
 
-    fprintf(log_file, "Game started in room %d\n", room_id);
+    pid_t process_id = getpid();
+    fprintf(log_file, "Game started in room %d by process %d\n", room_id, process_id);
     fflush(log_file);
 
     while (1) {
         printf("Updating game state in room %d\n", room_id);
 
         if (*forfeit) {
-            fprintf(log_file, "Player forfeited. Game in room %d ended\n", room_id);
+            fprintf(log_file, "Player forfeited. Game in room %d ended by process %d\n", room_id, process_id);
             fflush(log_file);
             break;
         }
 
-        fprintf(log_file, "Player moved piece from A to B\n");
+        fprintf(log_file, "Player moved piece from A to B by process %d\n", process_id);
         fflush(log_file);
 
         sleep(1);
     }
 
     fclose(log_file);
-    printf("Game in room %d has ended\n", room_id);
-
-    pthread_exit(NULL);
+    return NULL;
 }
